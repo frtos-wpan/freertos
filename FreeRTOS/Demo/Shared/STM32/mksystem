@@ -1,0 +1,37 @@
+#!/bin/sh
+#
+# mksystem - Adapt system_stm32fxxx.c to our needs
+#
+# Developed by Werner Almesberger for Actility S.A., and
+# licensed under LGPLv2 by Actility S.A.
+#
+
+usage()
+{
+	echo "usage: $0 infile pll_args ..." 1>&2
+	exit 1
+}
+
+
+[ "$2" ] || usage
+
+cat <<EOF
+/*
+ * MACHINE-GENERATED. DO NOT EDIT !
+ *
+ *
+ * Generator:		$0
+ * Original file:	$1
+ */
+
+EOF
+
+in=$1
+shift
+eval `pll/pll "$@"` || exit 1
+
+sed -e "s/\(#define PLL_M\).*/\1 $PLLM/" \
+    -e "s/\(#define PLL_N\).*/\1 $PLLN/" \
+    -e "s/\(#define PLL_P\).*/\1 $PLLP/" \
+    -e "s/\(#define PLL_Q\).*/\1 $PLLQ/" \
+    "$in"

@@ -1,0 +1,24 @@
+This is a FreeRTOS port to the Olimex STM32-E407 board, using just a
+bare GCC build environment.
+
+Architecture:	ARM Cortex M4F
+Chip:		STM32F407ZET6
+Board:		Olimex STM32-E407
+Toolchain:	GCC (arm-linux-gnueabi)
+SDK:		GNU Make
+Build platform:	Linux (Ubuntu 13.04)
+
+
+Application:
+
+We blink a LED. Furthermore, we integrate the Contiki OS and run
+an application that brings up an IEEE 802.15.4 network.
+
+
+Naming:
+
+in case we keep this generic and want to follow existing style, the
+name might be something like CORTEX_M4F_STM32F407ZG-Olimex-E407
+which would be painfully long.
+
+For now, we just use E407.

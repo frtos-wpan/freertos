@@ -1,0 +1,71 @@
+#
+# Shared/Contiki/Makefile.contiki - Build Contiki under FreeRTOS
+#
+# Developed by Werner Almesberger for Actility S.A., and
+# licensed under LGPLv2 by Actility S.A.
+#
+
+#
+# Path from the platform build directories.
+#
+FREERTOS ?= $(shell pwd)/../../..
+SHR_CONTIKI_DIR = $(FREERTOS)/FreeRTOS/Demo/Shared/Contiki
+
+CFLAGS += -I$(SHR_CONTIKI_DIR)
+
+# If the EUI64 is not provided, we generate it from the U_ID:
+ifdef EUI64
+CFLAGS += -DEUI64=$(EUI64)
+endif
+
+CFLAGS += -DSPI=$(SPI)
+
+CONTIKI_FLAGS = UIP_CONF_IPV6=1
+CONTIKI_FLAGS += RF_CHANNEL=$(RF_CHANNEL) PAN_ADDR=$(PAN_ADDR)
+CONTIKI_FLAGS += SHORT_ADDR=$(SHORT_ADDR)
+CONTIKI_FLAGS += RPL_CONF_OF=rpl_of0
+
+SRC += $(SHR_CONTIKI_DIR)/eui64.c $(SHR_CONTIKI_DIR)/eui64-stm32.c
+SRC += $(SHR_CONTIKI_DIR)/$(HAL).c $(SHR_CONTIKI_DIR)/gpio.c
+SRC += $(SHR_CONTIKI_DIR)/extint.c
+SRC += $(SHR_CONTIKI_DIR)/$(SPI).c
+SRC += $(SHR_CONTIKI_DIR)/md5/md5.c
+
+#####  Items for subordinate Contiki  #########################################
+
+#
+# Translate FreeRTOS chip family to Contiki-freertos target CPU selection.
+# The target CPU is something that only exists in the hybrid. In regular
+# ports, the target CPU is the same as the platform CPU. In "native" and
+# similar, the target CPU is implicitly whatever the host has.
+#
+
+CONTIKI_TARGET_CPU_STM32F2xx = cm3
+CONTIKI_TARGET_CPU_STM32F4xx = cm4
+CONTIKI_TARGET_CPU = $(CONTIKI_TARGET_CPU_$(CHIP_FAMILY))
+
+# Directory where contiki resides. Can be explicit path, subdirectory, symlink.
+CONTIKI = $(SHR_CONTIKI_DIR)/contiki
+OBJS += $(CONTIKI)/foo.co
+OBJS += $(CONTIKI)/contiki-freertos.a
+
+MAKE_CONTIKI = $(MAKE) -C $(CONTIKI) $(CONTIKI_FLAGS) \
+    TARGET=freertos CONTIKI_TARGET_CPU=$(CONTIKI_TARGET_CPU) \
+    FREERTOS=$(FREERTOS) \
+    FREERTOS_TARGET=$(shell pwd) \
+    FREERTOS_PORTABLE=$(FREERTOS)/FreeRTOS/Source/portable/GCC/$(CORE_ARCH) \
+    CONTIKI_EXTRA_PROJECTDIRS="$(CONTIKI_EXTRA_PROJECTDIRS)" \
+    CONTIKI_EXTRA_SOURCEFILES="$(CONTIKI_EXTRA_SOURCEFILES)"
+
+.PHONY:		$(CONTIKI)/foo.co $(CONTIKI)/contiki-freertos.a
+
+$(CONTIKI)/foo.co:
+		$(MAKE_CONTIKI) foo.co
+
+$(CONTIKI)/contiki-freertos.a:
+		$(MAKE_CONTIKI) contiki-freertos.a
+
+clean::
+		$(MAKE_CONTIKI) clean
+
+$(SHR_CONTIKI_DIR)/$(HAL).o: $(CONTIKI)/contiki-freertos.a

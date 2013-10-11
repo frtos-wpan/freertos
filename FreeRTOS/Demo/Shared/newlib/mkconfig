@@ -1,0 +1,53 @@
+#!/bin/sh
+#
+# mkconfig - Adapt FreeRTOSConfig.h to our needs
+#
+# Developed by Werner Almesberger for Actility S.A., and
+# licensed under LGPLv2 by Actility S.A.
+#
+
+
+usage()
+{
+	echo "usage: $0 [-s stack_bytes] FreeRTOSConfig.h" 1>&2
+	exit 1
+}
+
+
+stack=130
+if [ "$1" = -s ]; then
+	stack=$2
+	shift 2
+fi
+
+[ "$1" ] || usage
+[ "$2" ] && usage
+
+cat <<EOF
+/*
+ * MACHINE-GENERATED. DO NOT EDIT !
+ *
+ *
+ * Generator:		$0
+ * Original file:	$1
+ */
+
+EOF
+
+#
+# This changes the following:
+#
+# - strip those pesky DOS carriage returns
+# - change compiler name to GCC
+# - increase stack size from 130 bytes to 1300 bytes
+# - set configUSE_NEWLIB_REENTRANT
+# - call a handler on assertion failure, instead of just freezing
+#
+
+sed -e 's/\r//' \
+    -e 's/__ICCARM__/__GNUC__/' \
+    -e "s/130/$stack/" \
+    -e '/configUSE_PREEMPTION/{p;s/PREEMPTION/NEWLIB_REENTRANT/;}' \
+    -e 's/for(/void fail_assertion(const char *, unsigned); \\\
+	fail_assertion(__FILE__, __LINE__); for(/' \
+    "$1"

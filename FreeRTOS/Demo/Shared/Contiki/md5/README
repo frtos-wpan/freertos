@@ -1,0 +1,5 @@
+"Solar Designer"'s public domain implementation from
+http://openwall.info/wiki/people/solar/software/public-domain-source-code/md5
+
+wget http://openwall.info/wiki/_media/people/solar/software/public-domain-source-code/md5.h
+wget http://openwall.info/wiki/_media/people/solar/software/public-domain-source-code/md5.c
