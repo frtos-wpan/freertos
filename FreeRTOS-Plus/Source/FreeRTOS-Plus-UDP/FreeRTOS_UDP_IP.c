@@ -1,5 +1,6 @@
 /*
- * FreeRTOS+UDP V1.0.0 (C) 2013 Real Time Engineers ltd.
+ * FreeRTOS+UDP V1.0.1 (C) 2013 Real Time Engineers ltd.
+ * All rights reserved
  *
  * This file is part of the FreeRTOS+UDP distribution.  The FreeRTOS+UDP license
  * terms are different to the FreeRTOS license terms.
@@ -581,6 +582,10 @@ static portBASE_TYPE xReturn = pdFALSE;
 				#else
 				{
 					*ipLOCAL_IP_ADDRESS_POINTER = xNetworkAddressing.ulDefaultIPAddress;
+					
+					/* Ensure the gateway is on the same subnet as the IP 
+					address. */
+					configASSERT( ( ( *ipLOCAL_IP_ADDRESS_POINTER ) & xNetworkAddressing.ulNetMask ) == ( xNetworkAddressing.ulGatewayAddress & xNetworkAddressing.ulNetMask ) );
 				}
 				#endif /* ipconfigUSE_DHCP == 1 */
 
