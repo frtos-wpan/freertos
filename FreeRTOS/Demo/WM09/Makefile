@@ -59,6 +59,7 @@ clean::
 
 HAL = rf230-hal
 SPI = spi-stm32
+CONTIKI_EXTRA_SOURCEFILES = rf230bb.c
 
 EUI64 = 0xa0,0,0,0,0,0,0,3
 RF_CHANNEL = 11 
