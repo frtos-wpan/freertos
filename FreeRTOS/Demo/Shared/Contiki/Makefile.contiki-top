@@ -1,0 +1,23 @@
+#
+# Shared/Contiki/Makefile.contiki-top - Contiki top-level Makefile
+#
+# Developed by Werner Almesberger for Actility S.A., and
+# licensed under LGPLv2 by Actility S.A.
+#
+# Based on contiki-outoftree/Makefile
+#
+
+#
+# Note that this Makefile is used in the context of Contiki, not FreeRTOS.
+#
+# @@@ shouldn't include APPS or CONTIKI_PROJECT
+#
+
+CONTIKI_PROJECT = foo
+all: $(CONTIKI_PROJECT)
+
+CONTIKI = contiki
+TARGETDIRS += platform
+APPS += serial-shell
+
+include $(CONTIKI)/Makefile.include
