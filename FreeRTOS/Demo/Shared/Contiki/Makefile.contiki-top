@@ -20,4 +20,5 @@ CONTIKI = contiki
 TARGETDIRS += platform
 APPS += serial-shell
 
+CFLAGS += $(CONTIKI_EXTRA_CFLAGS_PREPEND)
 include $(CONTIKI)/Makefile.include
