@@ -67,6 +67,9 @@ RF_CHANNEL = 11
 PAN_ADDR = 0xabcd 
 SHORT_ADDR = 0x8003
 
+CONTIKI_FLAGS += USE_SHELL_WPAN=1
+CONTIKI_EXTRA_CFLAGS_PREPEND += -DHAVE_SHELL_WPAN
+
 include ../Shared/Contiki/Makefile.contiki
 
 #####  Final dependencies  ####################################################
