@@ -69,6 +69,6 @@ $(CONTIKI)/contiki-freertos.a:
 		$(MAKE_CONTIKI) contiki-freertos.a
 
 clean::
-		$(MAKE_CONTIKI) -i clean
+		$(MAKE_CONTIKI) clean
 
 $(SHR_CONTIKI_DIR)/$(HAL).o: $(CONTIKI)/contiki-freertos.a
