@@ -63,31 +63,19 @@
     1 tab == 4 spaces!
 */
 
-#ifndef PROJDEFS_H
-#define PROJDEFS_H
-
-/* Defines the prototype to which task functions must conform. */
-typedef void (*pdTASK_CODE)( void * );
-
-/* Defines the prototype to which callback functions called from the RTOS/timer
-daemon task must conform. */
-typedef void (*pdAPPLICATION_CALLBACK_CODE)( void *, unsigned long );
-
-#define pdFALSE		( ( portBASE_TYPE ) 0 )
-#define pdTRUE		( ( portBASE_TYPE ) 1 )
-
-#define pdPASS									( pdTRUE )
-#define pdFAIL									( pdFALSE )
-#define errQUEUE_EMPTY							( ( portBASE_TYPE ) 0 )
-#define errQUEUE_FULL							( ( portBASE_TYPE ) 0 )
-
-/* Error definitions. */
-#define errCOULD_NOT_ALLOCATE_REQUIRED_MEMORY	( -1 )
-#define errNO_TASK_TO_RUN						( -2 )
-#define errQUEUE_BLOCKED						( -4 )
-#define errQUEUE_YIELD							( -5 )
-
-#endif /* PROJDEFS_H */
 
 
+/*
+ * This file contains fairly comprehensive checks on the behaviour of event
+ * groups.  It is not intended to be a user friendly demonstration of the event
+ * groups API.
+ */
+
+#ifndef EVENT_GROUPS_DEMO_H
+#define EVENT_GROUPS_DEMO_H
+
+void vStartEventBitTasks( void );
+portBASE_TYPE xAreEventBitTasksStillRunning( void );
+
+#endif /* EVENT_GROUPS_DEMO_H */
 
