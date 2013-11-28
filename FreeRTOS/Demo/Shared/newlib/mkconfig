@@ -41,6 +41,7 @@ EOF
 # - change compiler name to GCC
 # - increase stack size from 130 bytes to 1300 bytes
 # - set configUSE_NEWLIB_REENTRANT
+# - remove cast from configMAX_PRIORITIES (incompatible with use in cpp)
 # - call a handler on assertion failure, instead of just freezing
 #
 
@@ -48,6 +49,7 @@ sed -e 's/\r//' \
     -e 's/__ICCARM__/__GNUC__/' \
     -e "s/130/$stack/" \
     -e '/configUSE_PREEMPTION/{p;s/PREEMPTION/NEWLIB_REENTRANT/;}' \
+    -e '/configMAX_PRIORITIES/{s/ ([^)]*) / /;}' \
     -e 's/for(/void fail_assertion(const char *, unsigned); \\\
 	fail_assertion(__FILE__, __LINE__); for(/' \
     "$1"
