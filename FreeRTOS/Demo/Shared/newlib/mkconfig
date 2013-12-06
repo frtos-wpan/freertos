@@ -42,6 +42,7 @@ EOF
 # - increase stack size from 130 bytes to 1300 bytes
 # - set configUSE_NEWLIB_REENTRANT
 # - remove cast from configMAX_PRIORITIES (incompatible with use in cpp)
+# - increase configTIMER_QUEUE_LENGTH from 10 to 16 (else we overrun too often)
 # - call a handler on assertion failure, instead of just freezing
 #
 
@@ -50,6 +51,7 @@ sed -e 's/\r//' \
     -e "s/130/$stack/" \
     -e '/configUSE_PREEMPTION/{p;s/PREEMPTION/NEWLIB_REENTRANT/;}' \
     -e '/configMAX_PRIORITIES/{s/ ([^)]*) / /;}' \
+    -e '/configTIMER_QUEUE_LENGTH/{s/10/16/;}' \
     -e 's/for(/void fail_assertion(const char *, unsigned); \\\
 	fail_assertion(__FILE__, __LINE__); for(/' \
     "$1"
