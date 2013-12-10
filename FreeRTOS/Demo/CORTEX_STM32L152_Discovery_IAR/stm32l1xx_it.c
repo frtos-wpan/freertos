@@ -24,7 +24,6 @@
 #include "stm32l1xx_it.h"
 #include "stm32l1xx_exti.h"
 #include "stm32l1xx_rtc.h"
-#include "discover_functions.h"
 #include "discover_board.h"
 #include "stm32l_discovery_lcd.h"
 #include "tsl.h"
@@ -116,10 +115,6 @@ void DebugMon_Handler(void)
   while (1);
 }
 
-void EXTI0_IRQHandler(void)
-{
-  EXTI_ClearITPendingBit(EXTI_Line0);
-}
 
 
 void RTC_WKUP_IRQHandler (void)
