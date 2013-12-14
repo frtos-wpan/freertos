@@ -66,6 +66,8 @@
 #define	PORT_SCLK	GPIOB
 #define	BIT_SCLK	10
 
+#endif /* ODEV */
+
 
 /* @@@ this feature probe is a little ugly ...  */
 
@@ -77,6 +79,5 @@
 #else
 #define	SPI_DEV_INIT	SPI_GPIO_DEV(MOSI, MISO, SCLK, nSEL)
 #endif
-#endif /* ODEV */
 
 #endif /* !PLATFORM_H */
