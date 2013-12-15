@@ -135,7 +135,7 @@ OBJS = $(SRC:.c=.o)
 CC_normal	:= $(CC)
 CP_normal	:= cp
 BUILD_normal	:=
-DEPEND_normal	:= $(CPP) $(CFLAGS) -MM -MG
+DEPEND_normal	:= $(CPP) -MM -MG
 MAKE_normal	:= $(MAKE)
 
 CC_quiet	= @echo "  CC       " $@ && $(CC_normal)
@@ -226,7 +226,7 @@ dfu:		$(NAME).bin
 #----- Dependencies ----------------------------------------------------------
 
 
-MKDEP =	$(DEPEND) $< |							\
+MKDEP =	$(DEPEND) $(CFLAGS) $< |					\
 	  sed 								\
 	    -e 's|^$(basename $(notdir $<)).o:|$@:|'			\
 	    -e '/^\(.*:\)\? */{p;s///;s/ *\\\?$$/ /;s/  */:\n/g;H;}'	\
