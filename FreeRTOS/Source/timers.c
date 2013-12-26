@@ -208,7 +208,7 @@ static void prvSwitchTimerLists( void ) PRIVILEGED_FUNCTION;
  * Obtain the current tick count, setting *pxTimerListsWereSwitched to pdTRUE
  * if a tick count overflow occurred since prvSampleTimeNow() was last called.
  */
-static portTickType prvSampleTimeNow( portBASE_TYPE *pxTimerListsWereSwitched ) PRIVILEGED_FUNCTION;
+static portTickType prvSampleTimeNow( portBASE_TYPE * const pxTimerListsWereSwitched ) PRIVILEGED_FUNCTION;
 
 /*
  * If the timer list contains any active timers then return the expire time of
@@ -216,7 +216,7 @@ static portTickType prvSampleTimeNow( portBASE_TYPE *pxTimerListsWereSwitched ) 
  * timer list does not contain any timers then return 0 and set *pxListWasEmpty
  * to pdTRUE.
  */
-static portTickType prvGetNextExpireTime( portBASE_TYPE *pxListWasEmpty ) PRIVILEGED_FUNCTION;
+static portTickType prvGetNextExpireTime( portBASE_TYPE * const pxListWasEmpty ) PRIVILEGED_FUNCTION;
 
 /*
  * If a timer has expired, process it.  Otherwise, block the timer service task
@@ -251,13 +251,17 @@ portBASE_TYPE xReturn = pdFAIL;
 		}
 		#endif
 	}
+	else
+	{
+		mtCOVERAGE_TEST_MARKER();
+	}
 
 	configASSERT( xReturn );
 	return xReturn;
 }
 /*-----------------------------------------------------------*/
 
-xTimerHandle xTimerCreate( const signed char * const pcTimerName, portTickType xTimerPeriodInTicks, unsigned portBASE_TYPE uxAutoReload, void *pvTimerID, tmrTIMER_CALLBACK pxCallbackFunction )
+xTimerHandle xTimerCreate( const signed char * const pcTimerName, const portTickType xTimerPeriodInTicks, const unsigned portBASE_TYPE uxAutoReload, void * const pvTimerID, tmrTIMER_CALLBACK pxCallbackFunction )
 {
 xTIMER *pxNewTimer;
 
@@ -298,7 +302,7 @@ xTIMER *pxNewTimer;
 }
 /*-----------------------------------------------------------*/
 
-portBASE_TYPE xTimerGenericCommand( xTimerHandle xTimer, portBASE_TYPE xCommandID, portTickType xOptionalValue, signed portBASE_TYPE *pxHigherPriorityTaskWoken, portTickType xBlockTime )
+portBASE_TYPE xTimerGenericCommand( xTimerHandle xTimer, const portBASE_TYPE xCommandID, const portTickType xOptionalValue, signed portBASE_TYPE * const pxHigherPriorityTaskWoken, const portTickType xBlockTime )
 {
 portBASE_TYPE xReturn = pdFAIL;
 xDAEMON_TASK_MESSAGE xMessage;
@@ -329,6 +333,10 @@ xDAEMON_TASK_MESSAGE xMessage;
 		}
 
 		traceTIMER_COMMAND_SEND( xTimer, xCommandID, xOptionalValue, xReturn );
+	}
+	else
+	{
+		mtCOVERAGE_TEST_MARKER();
 	}
 
 	return xReturn;
@@ -373,6 +381,14 @@ xTIMER * const pxTimer = ( xTIMER * ) listGET_OWNER_OF_HEAD_ENTRY( pxCurrentTime
 			configASSERT( xResult );
 			( void ) xResult;
 		}
+		else
+		{
+			mtCOVERAGE_TEST_MARKER();
+		}
+	}
+	else
+	{
+		mtCOVERAGE_TEST_MARKER();
 	}
 
 	/* Call the timer callback. */
@@ -443,6 +459,10 @@ portBASE_TYPE xTimerListsWereSwitched;
 					to block. */
 					portYIELD_WITHIN_API();
 				}
+				else
+				{
+					mtCOVERAGE_TEST_MARKER();
+				}
 			}
 		}
 		else
@@ -453,7 +473,7 @@ portBASE_TYPE xTimerListsWereSwitched;
 }
 /*-----------------------------------------------------------*/
 
-static portTickType prvGetNextExpireTime( portBASE_TYPE *pxListWasEmpty )
+static portTickType prvGetNextExpireTime( portBASE_TYPE * const pxListWasEmpty )
 {
 portTickType xNextExpireTime;
 
@@ -479,7 +499,7 @@ portTickType xNextExpireTime;
 }
 /*-----------------------------------------------------------*/
 
-static portTickType prvSampleTimeNow( portBASE_TYPE *pxTimerListsWereSwitched )
+static portTickType prvSampleTimeNow( portBASE_TYPE * const pxTimerListsWereSwitched )
 {
 portTickType xTimeNow;
 PRIVILEGED_DATA static portTickType xLastTime = ( portTickType ) 0U; /*lint !e956 Variable is only accessible to one task. */
@@ -565,6 +585,10 @@ portTickType xTimeNow;
 				/* Call the function. */
 				pxCallback->pxCallbackFunction( pxCallback->pvParameter1, pxCallback->ulParameter2 );
 			}
+			else
+			{
+				mtCOVERAGE_TEST_MARKER();
+			}
 		}
 		#endif /* INCLUDE_xTimerPendCallbackFromISR */
 
@@ -578,6 +602,10 @@ portTickType xTimeNow;
 			{
 				/* The timer is in a list, remove it. */
 				( void ) uxListRemove( &( pxTimer->xTimerListItem ) );
+			}
+			else
+			{
+				mtCOVERAGE_TEST_MARKER();
 			}
 
 			traceTIMER_COMMAND_RECEIVED( pxTimer, xMessage.xMessageID, xMessage.u.xTimerParameters.xMessageValue );
@@ -607,6 +635,14 @@ portTickType xTimeNow;
 							configASSERT( xResult );
 							( void ) xResult;
 						}
+						else
+						{
+							mtCOVERAGE_TEST_MARKER();
+						}
+					}
+					else
+					{
+						mtCOVERAGE_TEST_MARKER();
 					}
 					break;
 
@@ -690,6 +726,10 @@ portBASE_TYPE xResult;
 				( void ) xResult;
 			}
 		}
+		else
+		{
+			mtCOVERAGE_TEST_MARKER();
+		}
 	}
 
 	pxTemp = pxCurrentTimerList;
@@ -720,8 +760,16 @@ static void prvCheckForValidListAndQueue( void )
 				{
 					vQueueAddToRegistry( xTimerQueue, ( signed char * ) "TmrQ" );
 				}
+				else
+				{
+					mtCOVERAGE_TEST_MARKER();
+				}
 			}
 			#endif /* configQUEUE_REGISTRY_SIZE */
+		}
+		else
+		{
+			mtCOVERAGE_TEST_MARKER();
 		}
 	}
 	taskEXIT_CRITICAL();

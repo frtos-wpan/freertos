@@ -126,13 +126,12 @@ typedef struct QueueDefinition
 {
 	signed char *pcHead;					/*< Points to the beginning of the queue storage area. */
 	signed char *pcTail;					/*< Points to the byte at the end of the queue storage area.  Once more byte is allocated than necessary to store the queue items, this is used as a marker. */
-
 	signed char *pcWriteTo;					/*< Points to the free next place in the storage area. */
 
 	union									/* Use of a union is an exception to the coding standard to ensure two mutually exclusive structure members don't appear simultaneously (wasting RAM). */
 	{
 		signed char *pcReadFrom;			/*< Points to the last place that a queued item was read from when the structure is used as a queue. */
-		unsigned portBASE_TYPE uxRecursiveCallCount;/*< Maintains a count of the numebr of times a recursive mutex has been recursively 'taken' when the structure is used as a mutex. */
+		unsigned portBASE_TYPE uxRecursiveCallCount;/*< Maintains a count of the number of times a recursive mutex has been recursively 'taken' when the structure is used as a mutex. */
 	} u;
 
 	xList xTasksWaitingToSend;				/*< List of tasks that are blocked waiting to post onto this queue.  Stored in priority order. */
@@ -187,7 +186,7 @@ typedef struct QueueDefinition
  * to indicate that a task may require unblocking.  When the queue in unlocked
  * these lock counts are inspected, and the appropriate action taken.
  */
-static void prvUnlockQueue( xQUEUE *pxQueue ) PRIVILEGED_FUNCTION;
+static void prvUnlockQueue( xQUEUE * const pxQueue ) PRIVILEGED_FUNCTION;
 
 /*
  * Uses a critical section to determine if there is any data in a queue.
@@ -207,7 +206,7 @@ static signed portBASE_TYPE prvIsQueueFull( const xQUEUE *pxQueue ) PRIVILEGED_F
  * Copies an item into the queue, either at the front of the queue or the
  * back of the queue.
  */
-static void prvCopyDataToQueue( xQUEUE *pxQueue, const void *pvItemToQueue, portBASE_TYPE xPosition ) PRIVILEGED_FUNCTION;
+static void prvCopyDataToQueue( xQUEUE * const pxQueue, const void *pvItemToQueue, const portBASE_TYPE xPosition ) PRIVILEGED_FUNCTION;
 
 /*
  * Copies an item out of a queue.
@@ -219,7 +218,7 @@ static void prvCopyDataFromQueue( xQUEUE * const pxQueue, void * const pvBuffer 
 	 * Checks to see if a queue is a member of a queue set, and if so, notifies
 	 * the queue set that the queue contains data.
 	 */
-	static portBASE_TYPE prvNotifyQueueSetContainer( const xQUEUE * const pxQueue, portBASE_TYPE xCopyPosition ) PRIVILEGED_FUNCTION;
+	static portBASE_TYPE prvNotifyQueueSetContainer( const xQUEUE * const pxQueue, const portBASE_TYPE xCopyPosition ) PRIVILEGED_FUNCTION;
 #endif
 
 /*-----------------------------------------------------------*/
@@ -271,6 +270,14 @@ xQUEUE * const pxQueue = ( xQUEUE * ) xQueue;
 				{
 					queueYIELD_IF_USING_PREEMPTION();
 				}
+				else
+				{
+					mtCOVERAGE_TEST_MARKER();
+				}
+			}
+			else
+			{
+				mtCOVERAGE_TEST_MARKER();
 			}
 		}
 		else
@@ -288,7 +295,7 @@ xQUEUE * const pxQueue = ( xQUEUE * ) xQueue;
 }
 /*-----------------------------------------------------------*/
 
-xQueueHandle xQueueGenericCreate( unsigned portBASE_TYPE uxQueueLength, unsigned portBASE_TYPE uxItemSize, unsigned char ucQueueType )
+xQueueHandle xQueueGenericCreate( const unsigned portBASE_TYPE uxQueueLength, const unsigned portBASE_TYPE uxItemSize, const unsigned char ucQueueType )
 {
 xQUEUE *pxNewQueue;
 size_t xQueueSizeInBytes;
@@ -338,6 +345,14 @@ xQueueHandle xReturn = NULL;
 				vPortFree( pxNewQueue );
 			}
 		}
+		else
+		{
+			mtCOVERAGE_TEST_MARKER();
+		}
+	}
+	else
+	{
+		mtCOVERAGE_TEST_MARKER();
 	}
 
 	configASSERT( xReturn );
@@ -348,7 +363,7 @@ xQueueHandle xReturn = NULL;
 
 #if ( configUSE_MUTEXES == 1 )
 
-	xQueueHandle xQueueCreateMutex( unsigned char ucQueueType )
+	xQueueHandle xQueueCreateMutex( const unsigned char ucQueueType )
 	{
 	xQUEUE *pxNewQueue;
 
@@ -474,6 +489,10 @@ xQueueHandle xReturn = NULL;
 				task that might be waiting to access the mutex. */
 				( void ) xQueueGenericSend( pxMutex, NULL, queueMUTEX_GIVE_BLOCK_TIME, queueSEND_TO_BACK );
 			}
+			else
+			{
+				mtCOVERAGE_TEST_MARKER();
+			}
 
 			xReturn = pdPASS;
 		}
@@ -534,7 +553,7 @@ xQueueHandle xReturn = NULL;
 
 #if ( configUSE_COUNTING_SEMAPHORES == 1 )
 
-	xQueueHandle xQueueCreateCountingSemaphore( unsigned portBASE_TYPE uxMaxCount, unsigned portBASE_TYPE uxInitialCount )
+	xQueueHandle xQueueCreateCountingSemaphore( const unsigned portBASE_TYPE uxMaxCount, const unsigned portBASE_TYPE uxInitialCount )
 	{
 	xQueueHandle xHandle;
 
@@ -561,7 +580,7 @@ xQueueHandle xReturn = NULL;
 #endif /* configUSE_COUNTING_SEMAPHORES */
 /*-----------------------------------------------------------*/
 
-signed portBASE_TYPE xQueueGenericSend( xQueueHandle xQueue, const void * const pvItemToQueue, portTickType xTicksToWait, portBASE_TYPE xCopyPosition )
+signed portBASE_TYPE xQueueGenericSend( xQueueHandle xQueue, const void * const pvItemToQueue, portTickType xTicksToWait, const portBASE_TYPE xCopyPosition )
 {
 signed portBASE_TYPE xEntryTimeSet = pdFALSE;
 xTimeOutType xTimeOut;
@@ -604,6 +623,10 @@ xQUEUE * const pxQueue = ( xQUEUE * ) xQueue;
 							unblock. A context switch is required. */
 							queueYIELD_IF_USING_PREEMPTION();
 						}
+						else
+						{
+							mtCOVERAGE_TEST_MARKER();
+						}
 					}
 					else
 					{
@@ -619,6 +642,14 @@ xQUEUE * const pxQueue = ( xQUEUE * ) xQueue;
 								kernel takes care of that. */
 								queueYIELD_IF_USING_PREEMPTION();
 							}
+							else
+							{
+								mtCOVERAGE_TEST_MARKER();
+							}
+						}
+						else
+						{
+							mtCOVERAGE_TEST_MARKER();
 						}
 					}
 				}
@@ -636,6 +667,14 @@ xQUEUE * const pxQueue = ( xQUEUE * ) xQueue;
 							takes care of that. */
 							queueYIELD_IF_USING_PREEMPTION();
 						}
+						else
+						{
+							mtCOVERAGE_TEST_MARKER();
+						}
+					}
+					else
+					{
+						mtCOVERAGE_TEST_MARKER();
 					}
 				}
 				#endif /* configUSE_QUEUE_SETS */
@@ -669,6 +708,7 @@ xQUEUE * const pxQueue = ( xQUEUE * ) xQueue;
 				else
 				{
 					/* Entry time was already set. */
+					mtCOVERAGE_TEST_MARKER();
 				}
 			}
 		}
@@ -759,6 +799,14 @@ xQUEUE * const pxQueue = ( xQUEUE * ) xQueue;
 							our own so yield immediately. */
 							portYIELD_WITHIN_API();
 						}
+						else
+						{
+							mtCOVERAGE_TEST_MARKER();
+						}
+					}
+					else
+					{
+						mtCOVERAGE_TEST_MARKER();
 					}
 
 					taskEXIT_CRITICAL();
@@ -789,6 +837,10 @@ xQUEUE * const pxQueue = ( xQUEUE * ) xQueue;
 						traceBLOCKING_ON_QUEUE_SEND( pxQueue );
 						vTaskPlaceOnEventList( &( pxQueue->xTasksWaitingToSend ), xTicksToWait );
 						portYIELD_WITHIN_API();
+					}
+					else
+					{
+						mtCOVERAGE_TEST_MARKER();
 					}
 				}
 				else
@@ -843,6 +895,10 @@ xQUEUE * const pxQueue = ( xQUEUE * ) xQueue;
 								priority inheritance should it become necessary. */
 								pxQueue->pxMutexHolder = ( signed char * ) xTaskGetCurrentTaskHandle();
 							}
+							else
+							{
+								mtCOVERAGE_TEST_MARKER();
+							}
 						}
 						#endif
 
@@ -851,6 +907,10 @@ xQUEUE * const pxQueue = ( xQUEUE * ) xQueue;
 							if( xTaskRemoveFromEventList( &( pxQueue->xTasksWaitingToSend ) ) == pdTRUE )
 							{
 								portYIELD_WITHIN_API();
+							}
+							else
+							{
+								mtCOVERAGE_TEST_MARKER();
 							}
 						}
 					}
@@ -873,8 +933,15 @@ xQUEUE * const pxQueue = ( xQUEUE * ) xQueue;
 								/* The task waiting has a higher priority than this task. */
 								portYIELD_WITHIN_API();
 							}
+							else
+							{
+								mtCOVERAGE_TEST_MARKER();
+							}
 						}
-
+						else
+						{
+							mtCOVERAGE_TEST_MARKER();
+						}
 					}
 
 					taskEXIT_CRITICAL();
@@ -915,11 +982,19 @@ xQUEUE * const pxQueue = ( xQUEUE * ) xQueue;
 								}
 								taskEXIT_CRITICAL();
 							}
+							else
+							{
+								mtCOVERAGE_TEST_MARKER();
+							}
 						}
 						#endif
 
 						vTaskPlaceOnEventList( &( pxQueue->xTasksWaitingToReceive ), xTicksToWait );
 						portYIELD_WITHIN_API();
+					}
+					else
+					{
+						mtCOVERAGE_TEST_MARKER();
 					}
 				}
 				else
@@ -937,7 +1012,7 @@ xQUEUE * const pxQueue = ( xQUEUE * ) xQueue;
 #endif /* configUSE_ALTERNATIVE_API */
 /*-----------------------------------------------------------*/
 
-signed portBASE_TYPE xQueueGenericSendFromISR( xQueueHandle xQueue, const void * const pvItemToQueue, signed portBASE_TYPE *pxHigherPriorityTaskWoken, portBASE_TYPE xCopyPosition )
+signed portBASE_TYPE xQueueGenericSendFromISR( xQueueHandle xQueue, const void * const pvItemToQueue, signed portBASE_TYPE * const pxHigherPriorityTaskWoken, const portBASE_TYPE xCopyPosition )
 {
 signed portBASE_TYPE xReturn;
 unsigned portBASE_TYPE uxSavedInterruptStatus;
@@ -993,6 +1068,14 @@ xQUEUE * const pxQueue = ( xQUEUE * ) xQueue;
 							{
 								*pxHigherPriorityTaskWoken = pdTRUE;
 							}
+							else
+							{
+								mtCOVERAGE_TEST_MARKER();
+							}
+						}
+						else
+						{
+							mtCOVERAGE_TEST_MARKER();
 						}
 					}
 					else
@@ -1007,7 +1090,19 @@ xQUEUE * const pxQueue = ( xQUEUE * ) xQueue;
 								{
 									*pxHigherPriorityTaskWoken = pdTRUE;
 								}
+								else
+								{
+									mtCOVERAGE_TEST_MARKER();
+								}
 							}
+							else
+							{
+								mtCOVERAGE_TEST_MARKER();
+							}
+						}
+						else
+						{
+							mtCOVERAGE_TEST_MARKER();
 						}
 					}
 				}
@@ -1023,7 +1118,19 @@ xQUEUE * const pxQueue = ( xQUEUE * ) xQueue;
 							{
 								*pxHigherPriorityTaskWoken = pdTRUE;
 							}
+							else
+							{
+								mtCOVERAGE_TEST_MARKER();
+							}
 						}
+						else
+						{
+							mtCOVERAGE_TEST_MARKER();
+						}
+					}
+					else
+					{
+						mtCOVERAGE_TEST_MARKER();
 					}
 				}
 				#endif /* configUSE_QUEUE_SETS */
@@ -1049,7 +1156,7 @@ xQUEUE * const pxQueue = ( xQUEUE * ) xQueue;
 }
 /*-----------------------------------------------------------*/
 
-signed portBASE_TYPE xQueueGenericReceive( xQueueHandle xQueue, void * const pvBuffer, portTickType xTicksToWait, portBASE_TYPE xJustPeeking )
+signed portBASE_TYPE xQueueGenericReceive( xQueueHandle xQueue, void * const pvBuffer, portTickType xTicksToWait, const portBASE_TYPE xJustPeeking )
 {
 signed portBASE_TYPE xEntryTimeSet = pdFALSE;
 xTimeOutType xTimeOut;
@@ -1063,7 +1170,7 @@ xQUEUE * const pxQueue = ( xQUEUE * ) xQueue;
 		configASSERT( !( ( xTaskGetSchedulerState() == taskSCHEDULER_SUSPENDED ) && ( xTicksToWait != 0 ) ) );
 	}
 	#endif
-	
+
 	/* This function relaxes the coding standard somewhat to allow return
 	statements within the function itself.  This is done in the interest
 	of execution time efficiency. */
@@ -1097,6 +1204,10 @@ xQUEUE * const pxQueue = ( xQUEUE * ) xQueue;
 							priority inheritance should it become necessary. */
 							pxQueue->pxMutexHolder = ( signed char * ) xTaskGetCurrentTaskHandle(); /*lint !e961 Cast is not redundant as xTaskHandle is a typedef. */
 						}
+						else
+						{
+							mtCOVERAGE_TEST_MARKER();
+						}
 					}
 					#endif
 
@@ -1106,6 +1217,14 @@ xQUEUE * const pxQueue = ( xQUEUE * ) xQueue;
 						{
 							queueYIELD_IF_USING_PREEMPTION();
 						}
+						else
+						{
+							mtCOVERAGE_TEST_MARKER();
+						}
+					}
+					else
+					{
+						mtCOVERAGE_TEST_MARKER();
 					}
 				}
 				else
@@ -1127,6 +1246,14 @@ xQUEUE * const pxQueue = ( xQUEUE * ) xQueue;
 							/* The task waiting has a higher priority than this task. */
 							queueYIELD_IF_USING_PREEMPTION();
 						}
+						else
+						{
+							mtCOVERAGE_TEST_MARKER();
+						}
+					}
+					else
+					{
+						mtCOVERAGE_TEST_MARKER();
 					}
 				}
 
@@ -1153,6 +1280,7 @@ xQUEUE * const pxQueue = ( xQUEUE * ) xQueue;
 				else
 				{
 					/* Entry time was already set. */
+					mtCOVERAGE_TEST_MARKER();
 				}
 			}
 		}
@@ -1181,6 +1309,10 @@ xQUEUE * const pxQueue = ( xQUEUE * ) xQueue;
 						}
 						taskEXIT_CRITICAL();
 					}
+					else
+					{
+						mtCOVERAGE_TEST_MARKER();
+					}
 				}
 				#endif
 
@@ -1189,6 +1321,10 @@ xQUEUE * const pxQueue = ( xQUEUE * ) xQueue;
 				if( xTaskResumeAll() == pdFALSE )
 				{
 					portYIELD_WITHIN_API();
+				}
+				else
+				{
+					mtCOVERAGE_TEST_MARKER();
 				}
 			}
 			else
@@ -1209,7 +1345,7 @@ xQUEUE * const pxQueue = ( xQUEUE * ) xQueue;
 }
 /*-----------------------------------------------------------*/
 
-signed portBASE_TYPE xQueueReceiveFromISR( xQueueHandle xQueue, void * const pvBuffer, signed portBASE_TYPE *pxHigherPriorityTaskWoken )
+signed portBASE_TYPE xQueueReceiveFromISR( xQueueHandle xQueue, void * const pvBuffer, signed portBASE_TYPE * const pxHigherPriorityTaskWoken )
 {
 signed portBASE_TYPE xReturn;
 unsigned portBASE_TYPE uxSavedInterruptStatus;
@@ -1260,7 +1396,19 @@ xQUEUE * const pxQueue = ( xQUEUE * ) xQueue;
 						{
 							*pxHigherPriorityTaskWoken = pdTRUE;
 						}
+						else
+						{
+							mtCOVERAGE_TEST_MARKER();
+						}
 					}
+					else
+					{
+						mtCOVERAGE_TEST_MARKER();
+					}
+				}
+				else
+				{
+					mtCOVERAGE_TEST_MARKER();
 				}
 			}
 			else
@@ -1344,7 +1492,9 @@ unsigned portBASE_TYPE uxReturn;
 	configASSERT( xQueue );
 
 	taskENTER_CRITICAL();
+	{
 		uxReturn = ( ( xQUEUE * ) xQueue )->uxMessagesWaiting;
+	}
 	taskEXIT_CRITICAL();
 
 	return uxReturn;
@@ -1360,7 +1510,9 @@ xQUEUE *pxQueue;
 	configASSERT( pxQueue );
 
 	taskENTER_CRITICAL();
+	{
 		uxReturn = pxQueue->uxLength - pxQueue->uxMessagesWaiting;
+	}
 	taskEXIT_CRITICAL();
 
 	return uxReturn;
@@ -1391,7 +1543,10 @@ xQUEUE * const pxQueue = ( xQUEUE * ) xQueue;
 		vQueueUnregisterQueue( pxQueue );
 	}
 	#endif
-	vPortFree( pxQueue->pcHead );
+	if( pxQueue->pcHead != NULL )
+	{
+		vPortFree( pxQueue->pcHead );
+	}
 	vPortFree( pxQueue );
 }
 /*-----------------------------------------------------------*/
@@ -1426,7 +1581,7 @@ xQUEUE * const pxQueue = ( xQUEUE * ) xQueue;
 #endif /* configUSE_TRACE_FACILITY */
 /*-----------------------------------------------------------*/
 
-static void prvCopyDataToQueue( xQUEUE *pxQueue, const void *pvItemToQueue, portBASE_TYPE xPosition )
+static void prvCopyDataToQueue( xQUEUE * const pxQueue, const void *pvItemToQueue, const portBASE_TYPE xPosition )
 {
 	if( pxQueue->uxItemSize == ( unsigned portBASE_TYPE ) 0 )
 	{
@@ -1437,6 +1592,10 @@ static void prvCopyDataToQueue( xQUEUE *pxQueue, const void *pvItemToQueue, port
 				/* The mutex is no longer being held. */
 				vTaskPriorityDisinherit( ( void * ) pxQueue->pxMutexHolder );
 				pxQueue->pxMutexHolder = NULL;
+			}
+			else
+			{
+				mtCOVERAGE_TEST_MARKER();
 			}
 		}
 		#endif /* configUSE_MUTEXES */
@@ -1449,6 +1608,10 @@ static void prvCopyDataToQueue( xQUEUE *pxQueue, const void *pvItemToQueue, port
 		{
 			pxQueue->pcWriteTo = pxQueue->pcHead;
 		}
+		else
+		{
+			mtCOVERAGE_TEST_MARKER();
+		}
 	}
 	else
 	{
@@ -1457,6 +1620,10 @@ static void prvCopyDataToQueue( xQUEUE *pxQueue, const void *pvItemToQueue, port
 		if( pxQueue->u.pcReadFrom < pxQueue->pcHead ) /*lint !e946 MISRA exception justified as comparison of pointers is the cleanest solution. */
 		{
 			pxQueue->u.pcReadFrom = ( pxQueue->pcTail - pxQueue->uxItemSize );
+		}
+		else
+		{
+			mtCOVERAGE_TEST_MARKER();
 		}
 
 		if( xPosition == queueOVERWRITE )
@@ -1469,6 +1636,14 @@ static void prvCopyDataToQueue( xQUEUE *pxQueue, const void *pvItemToQueue, port
 				correct. */
 				--( pxQueue->uxMessagesWaiting );
 			}
+			else
+			{
+				mtCOVERAGE_TEST_MARKER();
+			}
+		}
+		else
+		{
+			mtCOVERAGE_TEST_MARKER();
 		}
 	}
 
@@ -1485,12 +1660,20 @@ static void prvCopyDataFromQueue( xQUEUE * const pxQueue, void * const pvBuffer 
 		{
 			pxQueue->u.pcReadFrom = pxQueue->pcHead;
 		}
+		else
+		{
+			mtCOVERAGE_TEST_MARKER();
+		}
 		( void ) memcpy( ( void * ) pvBuffer, ( void * ) pxQueue->u.pcReadFrom, ( size_t ) pxQueue->uxItemSize ); /*lint !e961 !e418 MISRA exception as the casts are only redundant for some ports.  Also previous logic ensures a null pointer can only be passed to memcpy() when the count is 0. */
+	}
+	else
+	{
+		mtCOVERAGE_TEST_MARKER();
 	}
 }
 /*-----------------------------------------------------------*/
 
-static void prvUnlockQueue( xQUEUE *pxQueue )
+static void prvUnlockQueue( xQUEUE * const pxQueue )
 {
 	/* THIS FUNCTION MUST BE CALLED WITH THE SCHEDULER SUSPENDED. */
 
@@ -1516,6 +1699,10 @@ static void prvUnlockQueue( xQUEUE *pxQueue )
 						A context switch is required. */
 						vTaskMissedYield();
 					}
+					else
+					{
+						mtCOVERAGE_TEST_MARKER();
+					}
 				}
 				else
 				{
@@ -1528,6 +1715,10 @@ static void prvUnlockQueue( xQUEUE *pxQueue )
 							/* The task waiting has a higher priority so record that a
 							context	switch is required. */
 							vTaskMissedYield();
+						}
+						else
+						{
+							mtCOVERAGE_TEST_MARKER();
 						}
 					}
 					else
@@ -1547,6 +1738,10 @@ static void prvUnlockQueue( xQUEUE *pxQueue )
 						/* The task waiting has a higher priority so record that a
 						context	switch is required. */
 						vTaskMissedYield();
+					}
+					else
+					{
+						mtCOVERAGE_TEST_MARKER();
 					}
 				}
 				else
@@ -1573,6 +1768,10 @@ static void prvUnlockQueue( xQUEUE *pxQueue )
 				if( xTaskRemoveFromEventList( &( pxQueue->xTasksWaitingToSend ) ) != pdFALSE )
 				{
 					vTaskMissedYield();
+				}
+				else
+				{
+					mtCOVERAGE_TEST_MARKER();
 				}
 
 				--( pxQueue->xRxLock );
@@ -1721,6 +1920,14 @@ signed portBASE_TYPE xReturn;
 						that a yield might be appropriate. */
 						xReturn = errQUEUE_YIELD;
 					}
+					else
+					{
+						mtCOVERAGE_TEST_MARKER();
+					}
+				}
+				else
+				{
+					mtCOVERAGE_TEST_MARKER();
 				}
 			}
 			else
@@ -1766,6 +1973,10 @@ signed portBASE_TYPE xReturn;
 					return errQUEUE_FULL;
 				}
 			}
+			else
+			{
+				mtCOVERAGE_TEST_MARKER();
+			}
 		}
 		portENABLE_INTERRUPTS();
 
@@ -1778,6 +1989,10 @@ signed portBASE_TYPE xReturn;
 				if( pxQueue->u.pcReadFrom >= pxQueue->pcTail )
 				{
 					pxQueue->u.pcReadFrom = pxQueue->pcHead;
+				}
+				else
+				{
+					mtCOVERAGE_TEST_MARKER();
 				}
 				--( pxQueue->uxMessagesWaiting );
 				( void ) memcpy( ( void * ) pvBuffer, ( void * ) pxQueue->u.pcReadFrom, ( unsigned ) pxQueue->uxItemSize );
@@ -1795,6 +2010,14 @@ signed portBASE_TYPE xReturn;
 					{
 						xReturn = errQUEUE_YIELD;
 					}
+					else
+					{
+						mtCOVERAGE_TEST_MARKER();
+					}
+				}
+				else
+				{
+					mtCOVERAGE_TEST_MARKER();
 				}
 			}
 			else
@@ -1832,8 +2055,24 @@ signed portBASE_TYPE xReturn;
 					{
 						return pdTRUE;
 					}
+					else
+					{
+						mtCOVERAGE_TEST_MARKER();
+					}
+				}
+				else
+				{
+					mtCOVERAGE_TEST_MARKER();
 				}
 			}
+			else
+			{
+				mtCOVERAGE_TEST_MARKER();
+			}
+		}
+		else
+		{
+			mtCOVERAGE_TEST_MARKER();
 		}
 
 		return xCoRoutinePreviouslyWoken;
@@ -1859,6 +2098,10 @@ signed portBASE_TYPE xReturn;
 			{
 				pxQueue->u.pcReadFrom = pxQueue->pcHead;
 			}
+			else
+			{
+				mtCOVERAGE_TEST_MARKER();
+			}
 			--( pxQueue->uxMessagesWaiting );
 			( void ) memcpy( ( void * ) pvBuffer, ( void * ) pxQueue->u.pcReadFrom, ( unsigned ) pxQueue->uxItemSize );
 
@@ -1870,7 +2113,19 @@ signed portBASE_TYPE xReturn;
 					{
 						*pxCoRoutineWoken = pdTRUE;
 					}
+					else
+					{
+						mtCOVERAGE_TEST_MARKER();
+					}
 				}
+				else
+				{
+					mtCOVERAGE_TEST_MARKER();
+				}
+			}
+			else
+			{
+				mtCOVERAGE_TEST_MARKER();
 			}
 
 			xReturn = pdPASS;
@@ -1903,6 +2158,10 @@ signed portBASE_TYPE xReturn;
 				xQueueRegistry[ ux ].xHandle = xQueue;
 				break;
 			}
+			else
+			{
+				mtCOVERAGE_TEST_MARKER();
+			}
 		}
 	}
 
@@ -1924,6 +2183,10 @@ signed portBASE_TYPE xReturn;
 				/* Set the name to NULL to show that this slot if free again. */
 				xQueueRegistry[ ux ].pcQueueName = NULL;
 				break;
+			}
+			else
+			{
+				mtCOVERAGE_TEST_MARKER();
 			}
 		}
 
@@ -1958,6 +2221,10 @@ signed portBASE_TYPE xReturn;
 			/* There is nothing in the queue, block for the specified period. */
 			vTaskPlaceOnEventListRestricted( &( pxQueue->xTasksWaitingToReceive ), xTicksToWait );
 		}
+		else
+		{
+			mtCOVERAGE_TEST_MARKER();
+		}
 		prvUnlockQueue( pxQueue );
 	}
 
@@ -1966,7 +2233,7 @@ signed portBASE_TYPE xReturn;
 
 #if ( configUSE_QUEUE_SETS == 1 )
 
-	xQueueSetHandle xQueueCreateSet( unsigned portBASE_TYPE uxEventQueueLength )
+	xQueueSetHandle xQueueCreateSet( const unsigned portBASE_TYPE uxEventQueueLength )
 	{
 	xQueueSetHandle pxQueue;
 
@@ -2049,7 +2316,7 @@ signed portBASE_TYPE xReturn;
 
 #if ( configUSE_QUEUE_SETS == 1 )
 
-	xQueueSetMemberHandle xQueueSelectFromSet( xQueueSetHandle xQueueSet, portTickType xBlockTimeTicks )
+	xQueueSetMemberHandle xQueueSelectFromSet( xQueueSetHandle xQueueSet, portTickType const xBlockTimeTicks )
 	{
 	xQueueSetMemberHandle xReturn = NULL;
 
@@ -2075,7 +2342,7 @@ signed portBASE_TYPE xReturn;
 
 #if ( configUSE_QUEUE_SETS == 1 )
 
-	static portBASE_TYPE prvNotifyQueueSetContainer( const xQUEUE * const pxQueue, portBASE_TYPE xCopyPosition )
+	static portBASE_TYPE prvNotifyQueueSetContainer( const xQUEUE * const pxQueue, const portBASE_TYPE xCopyPosition )
 	{
 	xQUEUE *pxQueueSetContainer = pxQueue->pxQueueSetContainer;
 	portBASE_TYPE xReturn = pdFALSE;
@@ -2095,7 +2362,19 @@ signed portBASE_TYPE xReturn;
 					/* The task waiting has a higher priority */
 					xReturn = pdTRUE;
 				}
+				else
+				{
+					mtCOVERAGE_TEST_MARKER();
+				}
 			}
+			else
+			{
+				mtCOVERAGE_TEST_MARKER();
+			}
+		}
+		else
+		{
+			mtCOVERAGE_TEST_MARKER();
 		}
 
 		return xReturn;

@@ -362,9 +362,28 @@ count overflows. */
  */
 #define prvGetTCBFromHandle( pxHandle ) ( ( ( pxHandle ) == NULL ) ? ( tskTCB * ) pxCurrentTCB : ( tskTCB * ) ( pxHandle ) )
 
+/* The item value of the event list item is normally used to hold the priority
+of the task to which it belongs (coded to allow it to be held in reverse
+priority order).  However, it is occasionally borrowed for other purposes.  It
+is important its value is not updated due to a task priority change while it is
+being used for another purpose.  The following bit definition is used to inform
+the scheduler that the value should not be changed - in which case it is the
+responsibility of whichever module is using the value to ensure it gets set back
+to its original value when it is released. */
+#if configUSE_16_BIT_TICKS == 1
+	#define taskEVENT_LIST_ITEM_VALUE_IN_USE	0x8000U
+#else
+	#define taskEVENT_LIST_ITEM_VALUE_IN_USE	0x80000000UL
+#endif
+
 /* Callback function prototypes. --------------------------*/
-extern void vApplicationStackOverflowHook( xTaskHandle xTask, signed char *pcTaskName );
-extern void vApplicationTickHook( void );
+#if configCHECK_FOR_STACK_OVERFLOW > 0
+	extern void vApplicationStackOverflowHook( xTaskHandle xTask, signed char *pcTaskName );
+#endif
+
+#if configUSE_TICK_HOOK > 0
+	extern void vApplicationTickHook( void );
+#endif
 
 /* File private functions. --------------------------------*/
 
@@ -372,7 +391,7 @@ extern void vApplicationTickHook( void );
  * Utility to ready a TCB for a given task.  Mainly just copies the parameters
  * into the TCB structure.
  */
-static void prvInitialiseTCBVariables( tskTCB *pxTCB, const signed char * const pcName, unsigned portBASE_TYPE uxPriority, const xMemoryRegion * const xRegions, unsigned short usStackDepth ) PRIVILEGED_FUNCTION;
+static void prvInitialiseTCBVariables( tskTCB * const pxTCB, const signed char * const pcName, unsigned portBASE_TYPE uxPriority, const xMemoryRegion * const xRegions, const unsigned short usStackDepth ) PRIVILEGED_FUNCTION;
 
 /*
  * Utility to ready all the lists used by the scheduler.  This is called
@@ -417,13 +436,13 @@ static void prvCheckTasksWaitingTermination( void ) PRIVILEGED_FUNCTION;
  * The currently executing task is entering the Blocked state.  Add the task to
  * either the current or the overflow delayed task list.
  */
-static void prvAddCurrentTaskToDelayedList( portTickType xTimeToWake ) PRIVILEGED_FUNCTION;
+static void prvAddCurrentTaskToDelayedList( const portTickType xTimeToWake ) PRIVILEGED_FUNCTION;
 
 /*
  * Allocates memory from the heap for a TCB and associated stack.  Checks the
  * allocation was successful.
  */
-static tskTCB *prvAllocateTCBAndStack( unsigned short usStackDepth, portSTACK_TYPE *puxStackBuffer ) PRIVILEGED_FUNCTION;
+static tskTCB *prvAllocateTCBAndStack( const unsigned short usStackDepth, portSTACK_TYPE * const puxStackBuffer ) PRIVILEGED_FUNCTION;
 
 /*
  * Fills an xTaskStatusType structure with information on each task that is
@@ -473,7 +492,7 @@ static void prvResetNextTaskUnblockTime( void );
 
 /*-----------------------------------------------------------*/
 
-signed portBASE_TYPE xTaskGenericCreate( pdTASK_CODE pxTaskCode, const signed char * const pcName, unsigned short usStackDepth, void *pvParameters, unsigned portBASE_TYPE uxPriority, xTaskHandle *pxCreatedTask, portSTACK_TYPE *puxStackBuffer, const xMemoryRegion * const xRegions )
+signed portBASE_TYPE xTaskGenericCreate( pdTASK_CODE pxTaskCode, const signed char * const pcName, const unsigned short usStackDepth, void * const pvParameters, unsigned portBASE_TYPE uxPriority, xTaskHandle * const pxCreatedTask, portSTACK_TYPE * const puxStackBuffer, const xMemoryRegion * const xRegions )
 {
 signed portBASE_TYPE xReturn;
 tskTCB * pxNewTCB;
@@ -553,6 +572,10 @@ tskTCB * pxNewTCB;
 			required.*/
 			*pxCreatedTask = ( xTaskHandle ) pxNewTCB;
 		}
+		else
+		{
+			mtCOVERAGE_TEST_MARKER();
+		}
 
 		/* Ensure interrupts don't access the task lists while they are being
 		updated. */
@@ -572,6 +595,10 @@ tskTCB * pxNewTCB;
 					fails, but we will report the failure. */
 					prvInitialiseTaskLists();
 				}
+				else
+				{
+					mtCOVERAGE_TEST_MARKER();
+				}
 			}
 			else
 			{
@@ -584,6 +611,14 @@ tskTCB * pxNewTCB;
 					{
 						pxCurrentTCB = pxNewTCB;
 					}
+					else
+					{
+						mtCOVERAGE_TEST_MARKER();
+					}
+				}
+				else
+				{
+					mtCOVERAGE_TEST_MARKER();
 				}
 			}
 
@@ -620,6 +655,14 @@ tskTCB * pxNewTCB;
 			{
 				taskYIELD_IF_USING_PREEMPTION();
 			}
+			else
+			{
+				mtCOVERAGE_TEST_MARKER();
+			}
+		}
+		else
+		{
+			mtCOVERAGE_TEST_MARKER();
 		}
 	}
 
@@ -647,11 +690,19 @@ tskTCB * pxNewTCB;
 			{
 				taskRESET_READY_PRIORITY( pxTCB->uxPriority );
 			}
+			else
+			{
+				mtCOVERAGE_TEST_MARKER();
+			}
 
 			/* Is the task waiting on an event also? */
 			if( listLIST_ITEM_CONTAINER( &( pxTCB->xEventListItem ) ) != NULL )
 			{
 				( void ) uxListRemove( &( pxTCB->xEventListItem ) );
+			}
+			else
+			{
+				mtCOVERAGE_TEST_MARKER();
 			}
 
 			vListInsertEnd( &xTasksWaitingTermination, &( pxTCB->xGenericListItem ) );
@@ -728,6 +779,10 @@ tskTCB * pxNewTCB;
 				{
 					xShouldDelay = pdTRUE;
 				}
+				else
+				{
+					mtCOVERAGE_TEST_MARKER();
+				}
 			}
 			else
 			{
@@ -737,6 +792,10 @@ tskTCB * pxNewTCB;
 				if( ( xTimeToWake < *pxPreviousWakeTime ) || ( xTimeToWake > xConstTickCount ) )
 				{
 					xShouldDelay = pdTRUE;
+				}
+				else
+				{
+					mtCOVERAGE_TEST_MARKER();
 				}
 			}
 
@@ -757,8 +816,16 @@ tskTCB * pxNewTCB;
 					directly. */
 					portRESET_READY_PRIORITY( pxCurrentTCB->uxPriority, uxTopReadyPriority );
 				}
+				else
+				{
+					mtCOVERAGE_TEST_MARKER();
+				}
 
 				prvAddCurrentTaskToDelayedList( xTimeToWake );
+			}
+			else
+			{
+				mtCOVERAGE_TEST_MARKER();
 			}
 		}
 		xAlreadyYielded = xTaskResumeAll();
@@ -768,6 +835,10 @@ tskTCB * pxNewTCB;
 		if( xAlreadyYielded == pdFALSE )
 		{
 			portYIELD_WITHIN_API();
+		}
+		else
+		{
+			mtCOVERAGE_TEST_MARKER();
 		}
 	}
 
@@ -812,9 +883,17 @@ tskTCB * pxNewTCB;
 					directly. */
 					portRESET_READY_PRIORITY( pxCurrentTCB->uxPriority, uxTopReadyPriority );
 				}
+				else
+				{
+					mtCOVERAGE_TEST_MARKER();
+				}
 				prvAddCurrentTaskToDelayedList( xTimeToWake );
 			}
 			xAlreadyYielded = xTaskResumeAll();
+		}
+		else
+		{
+			mtCOVERAGE_TEST_MARKER();
 		}
 
 		/* Force a reschedule if xTaskResumeAll has not already done so, we may
@@ -822,6 +901,10 @@ tskTCB * pxNewTCB;
 		if( xAlreadyYielded == pdFALSE )
 		{
 			portYIELD_WITHIN_API();
+		}
+		else
+		{
+			mtCOVERAGE_TEST_MARKER();
 		}
 	}
 
@@ -935,6 +1018,10 @@ tskTCB * pxNewTCB;
 		{
 			uxNewPriority = ( unsigned portBASE_TYPE ) configMAX_PRIORITIES - ( unsigned portBASE_TYPE ) 1U;
 		}
+		else
+		{
+			mtCOVERAGE_TEST_MARKER();
+		}
 
 		taskENTER_CRITICAL();
 		{
@@ -968,6 +1055,10 @@ tskTCB * pxNewTCB;
 						if( uxNewPriority >= pxCurrentTCB->uxPriority )
 						{
 							xYieldRequired = pdTRUE;
+						}
+						else
+						{
+							mtCOVERAGE_TEST_MARKER();
 						}
 					}
 					else
@@ -1004,6 +1095,10 @@ tskTCB * pxNewTCB;
 					{
 						pxTCB->uxPriority = uxNewPriority;
 					}
+					else
+					{
+						mtCOVERAGE_TEST_MARKER();
+					}
 
 					/* The base priority gets set whatever. */
 					pxTCB->uxBasePriority = uxNewPriority;
@@ -1014,7 +1109,16 @@ tskTCB * pxNewTCB;
 				}
 				#endif
 
-				listSET_LIST_ITEM_VALUE( &( pxTCB->xEventListItem ), ( ( portTickType ) configMAX_PRIORITIES - ( portTickType ) uxNewPriority ) ); /*lint !e961 MISRA exception as the casts are only redundant for some ports. */
+				/* Only reset the event list item value if the value is not
+				being used for anything else. */
+				if( ( listGET_LIST_ITEM_VALUE( &( pxTCB->xEventListItem ) ) & taskEVENT_LIST_ITEM_VALUE_IN_USE ) == 0 )
+				{
+					listSET_LIST_ITEM_VALUE( &( pxTCB->xEventListItem ), ( ( portTickType ) configMAX_PRIORITIES - ( portTickType ) uxNewPriority ) ); /*lint !e961 MISRA exception as the casts are only redundant for some ports. */
+				}
+				else
+				{
+					mtCOVERAGE_TEST_MARKER();
+				}
 
 				/* If the task is in the blocked or suspended list we need do
 				nothing more than change it's priority variable. However, if
@@ -1032,12 +1136,24 @@ tskTCB * pxNewTCB;
 						reset macro can be called directly. */
 						portRESET_READY_PRIORITY( uxPriorityUsedOnEntry, uxTopReadyPriority );
 					}
+					else
+					{
+						mtCOVERAGE_TEST_MARKER();
+					}
 					prvAddTaskToReadyList( pxTCB );
+				}
+				else
+				{
+					mtCOVERAGE_TEST_MARKER();
 				}
 
 				if( xYieldRequired == pdTRUE )
 				{
 					taskYIELD_IF_USING_PREEMPTION();
+				}
+				else
+				{
+					mtCOVERAGE_TEST_MARKER();
 				}
 
 				/* Remove compiler warning about unused variables when the port
@@ -1071,11 +1187,19 @@ tskTCB * pxNewTCB;
 			{
 				taskRESET_READY_PRIORITY( pxTCB->uxPriority );
 			}
+			else
+			{
+				mtCOVERAGE_TEST_MARKER();
+			}
 
 			/* Is the task waiting on an event also? */
 			if( listLIST_ITEM_CONTAINER( &( pxTCB->xEventListItem ) ) != NULL )
 			{
 				( void ) uxListRemove( &( pxTCB->xEventListItem ) );
+			}
+			else
+			{
+				mtCOVERAGE_TEST_MARKER();
 			}
 
 			vListInsertEnd( &xSuspendedTaskList, &( pxTCB->xGenericListItem ) );
@@ -1118,6 +1242,10 @@ tskTCB * pxNewTCB;
 				task that is now in the Suspended state. */
 				prvResetNextTaskUnblockTime();
 			}
+			else
+			{
+				mtCOVERAGE_TEST_MARKER();
+			}
 		}
 	}
 
@@ -1149,7 +1277,19 @@ tskTCB * pxNewTCB;
 				{
 					xReturn = pdTRUE;
 				}
+				else
+				{
+					mtCOVERAGE_TEST_MARKER();
+				}
 			}
+			else
+			{
+				mtCOVERAGE_TEST_MARKER();
+			}
+		}
+		else
+		{
+			mtCOVERAGE_TEST_MARKER();
 		}
 
 		return xReturn;
@@ -1190,9 +1330,21 @@ tskTCB * pxNewTCB;
 						next yield. */
 						taskYIELD_IF_USING_PREEMPTION();
 					}
+					else
+					{
+						mtCOVERAGE_TEST_MARKER();
+					}
+				}
+				else
+				{
+					mtCOVERAGE_TEST_MARKER();
 				}
 			}
 			taskEXIT_CRITICAL();
+		}
+		else
+		{
+			mtCOVERAGE_TEST_MARKER();
 		}
 	}
 
@@ -1240,6 +1392,10 @@ tskTCB * pxNewTCB;
 					{
 						xYieldRequired = pdTRUE;
 					}
+					else
+					{
+						mtCOVERAGE_TEST_MARKER();
+					}
 
 					( void ) uxListRemove(  &( pxTCB->xGenericListItem ) );
 					prvAddTaskToReadyList( pxTCB );
@@ -1251,6 +1407,10 @@ tskTCB * pxNewTCB;
 					yield will be performed if necessary. */
 					vListInsertEnd( &( xPendingReadyList ), &( pxTCB->xEventListItem ) );
 				}
+			}
+			else
+			{
+				mtCOVERAGE_TEST_MARKER();
 			}
 		}
 		portCLEAR_INTERRUPT_MASK_FROM_ISR( uxSavedInterruptStatus );
@@ -1284,6 +1444,10 @@ portBASE_TYPE xReturn;
 		if( xReturn == pdPASS )
 		{
 			xReturn = xTimerCreateTimerTask();
+		}
+		else
+		{
+			mtCOVERAGE_TEST_MARKER();
 		}
 	}
 	#endif /* configUSE_TIMERS */
@@ -1421,11 +1585,16 @@ portBASE_TYPE xAlreadyYielded = pdFALSE;
 					{
 						xYieldPending = pdTRUE;
 					}
+					else
+					{
+						mtCOVERAGE_TEST_MARKER();
+					}
 				}
 
 				/* If any ticks occurred while the scheduler was suspended then
-				they should be processed now.  This ensures the tick count does not
-				slip, and that any delayed tasks are resumed at the correct time. */
+				they should be processed now.  This ensures the tick count does
+				not	slip, and that any delayed tasks are resumed at the correct
+				time. */
 				if( uxPendedTicks > ( unsigned portBASE_TYPE ) 0U )
 				{
 					while( uxPendedTicks > ( unsigned portBASE_TYPE ) 0U )
@@ -1434,8 +1603,16 @@ portBASE_TYPE xAlreadyYielded = pdFALSE;
 						{
 							xYieldPending = pdTRUE;
 						}
+						else
+						{
+							mtCOVERAGE_TEST_MARKER();
+						}
 						--uxPendedTicks;
 					}
+				}
+				else
+				{
+					mtCOVERAGE_TEST_MARKER();
 				}
 
 				if( xYieldPending == pdTRUE )
@@ -1447,7 +1624,15 @@ portBASE_TYPE xAlreadyYielded = pdFALSE;
 					#endif
 					taskYIELD_IF_USING_PREEMPTION();
 				}
+				else
+				{
+					mtCOVERAGE_TEST_MARKER();
+				}
 			}
+		}
+		else
+		{
+			mtCOVERAGE_TEST_MARKER();
 		}
 	}
 	taskEXIT_CRITICAL();
@@ -1525,7 +1710,7 @@ unsigned portBASE_TYPE uxTaskGetNumberOfTasks( void )
 
 #if ( configUSE_TRACE_FACILITY == 1 )
 
-	unsigned portBASE_TYPE uxTaskGetSystemState( xTaskStatusType *pxTaskStatusArray, unsigned portBASE_TYPE uxArraySize, unsigned long *pulTotalRunTime )
+	unsigned portBASE_TYPE uxTaskGetSystemState( xTaskStatusType * const pxTaskStatusArray, const unsigned portBASE_TYPE uxArraySize, unsigned long * const pulTotalRunTime )
 	{
 	unsigned portBASE_TYPE uxTask = 0, uxQueue = configMAX_PRIORITIES;
 
@@ -1584,6 +1769,10 @@ unsigned portBASE_TYPE uxTaskGetNumberOfTasks( void )
 				}
 				#endif
 			}
+			else
+			{
+				mtCOVERAGE_TEST_MARKER();
+			}
 		}
 		( void ) xTaskResumeAll();
 
@@ -1612,7 +1801,7 @@ implementations require configUSE_TICKLESS_IDLE to be set to a value other than
 1. */
 #if ( configUSE_TICKLESS_IDLE != 0 )
 
-	void vTaskStepTick( portTickType xTicksToJump )
+	void vTaskStepTick( const portTickType xTicksToJump )
 	{
 		/* Correct the tick count value after a period during which the tick
 		was suppressed.  Note this does *not* call the tick hook function for
@@ -1649,6 +1838,10 @@ portBASE_TYPE xSwitchRequired = pdFALSE;
 			if( xConstTickCount == ( portTickType ) 0U )
 			{
 				taskSWITCH_DELAYED_LISTS();
+			}
+			else
+			{
+				mtCOVERAGE_TEST_MARKER();
 			}
 
 			/* See if this tick has made a timeout expire.  Tasks are stored in
@@ -1688,6 +1881,10 @@ portBASE_TYPE xSwitchRequired = pdFALSE;
 							xNextTaskUnblockTime = xItemValue;
 							break;
 						}
+						else
+						{
+							mtCOVERAGE_TEST_MARKER();
+						}
 
 						/* It is time to remove the item from the Blocked state. */
 						( void ) uxListRemove( &( pxTCB->xGenericListItem ) );
@@ -1697,6 +1894,10 @@ portBASE_TYPE xSwitchRequired = pdFALSE;
 						if( listLIST_ITEM_CONTAINER( &( pxTCB->xEventListItem ) ) != NULL )
 						{
 							( void ) uxListRemove( &( pxTCB->xEventListItem ) );
+						}
+						else
+						{
+							mtCOVERAGE_TEST_MARKER();
 						}
 
 						/* Place the unblocked task into the appropriate ready
@@ -1715,6 +1916,10 @@ portBASE_TYPE xSwitchRequired = pdFALSE;
 							{
 								xSwitchRequired = pdTRUE;
 							}
+							else
+							{
+								mtCOVERAGE_TEST_MARKER();
+							}
 						}
 						#endif /* configUSE_PREEMPTION */
 					}
@@ -1731,6 +1936,10 @@ portBASE_TYPE xSwitchRequired = pdFALSE;
 			{
 				xSwitchRequired = pdTRUE;
 			}
+			else
+			{
+				mtCOVERAGE_TEST_MARKER();
+			}
 		}
 		#endif /* ( ( configUSE_PREEMPTION == 1 ) && ( configUSE_TIME_SLICING == 1 ) ) */
 
@@ -1741,6 +1950,10 @@ portBASE_TYPE xSwitchRequired = pdFALSE;
 			if( uxPendedTicks == ( unsigned portBASE_TYPE ) 0U )
 			{
 				vApplicationTickHook();
+			}
+			else
+			{
+				mtCOVERAGE_TEST_MARKER();
 			}
 		}
 		#endif /* configUSE_TICK_HOOK */
@@ -1763,6 +1976,10 @@ portBASE_TYPE xSwitchRequired = pdFALSE;
 		if( xYieldPending != pdFALSE )
 		{
 			xSwitchRequired = pdTRUE;
+		}
+		else
+		{
+			mtCOVERAGE_TEST_MARKER();
 		}
 	}
 	#endif /* configUSE_PREEMPTION */
@@ -1818,7 +2035,9 @@ portBASE_TYPE xSwitchRequired = pdFALSE;
 		/* Save the hook function in the TCB.  A critical section is required as
 		the value can be accessed from an interrupt. */
 		taskENTER_CRITICAL();
+		{
 			xReturn = xTCB->pxTaskTag;
+		}
 		taskEXIT_CRITICAL();
 
 		return xReturn;
@@ -1891,6 +2110,10 @@ void vTaskSwitchContext( void )
 				{
 					pxCurrentTCB->ulRunTimeCounter += ( ulTotalRunTime - ulTaskSwitchedInTime );
 				}
+				else
+				{
+					mtCOVERAGE_TEST_MARKER();
+				}
 				ulTaskSwitchedInTime = ulTotalRunTime;
 		}
 		#endif /* configGENERATE_RUN_TIME_STATS */
@@ -1936,6 +2159,10 @@ portTickType xTimeToWake;
 		check, and the port reset macro can be called directly. */
 		portRESET_READY_PRIORITY( pxCurrentTCB->uxPriority, uxTopReadyPriority );
 	}
+	else
+	{
+		mtCOVERAGE_TEST_MARKER();
+	}
 
 	#if ( INCLUDE_vTaskSuspend == 1 )
 	{
@@ -1965,7 +2192,7 @@ portTickType xTimeToWake;
 }
 /*-----------------------------------------------------------*/
 
-void vTaskPlaceOnUnorderedEventList( xList * pxEventList, portTickType xItemValue, const portTickType xTicksToWait )
+void vTaskPlaceOnUnorderedEventList( xList * pxEventList, const portTickType xItemValue, const portTickType xTicksToWait )
 {
 portTickType xTimeToWake;
 
@@ -1975,7 +2202,7 @@ portTickType xTimeToWake;
 	SCHEDULER SUSPENDED. */
 
 	/* Store the item value in the event list item. */
-	listSET_LIST_ITEM_VALUE( &( pxCurrentTCB->xEventListItem ), xItemValue );
+	listSET_LIST_ITEM_VALUE( &( pxCurrentTCB->xEventListItem ), xItemValue | taskEVENT_LIST_ITEM_VALUE_IN_USE );
 
 	/* Place the event list item of the TCB at the end of the appropriate event
 	list. */
@@ -1989,6 +2216,10 @@ portTickType xTimeToWake;
 		/* The current task must be in a ready list, so there is no need to
 		check, and the port reset macro can be called directly. */
 		portRESET_READY_PRIORITY( pxCurrentTCB->uxPriority, uxTopReadyPriority );
+	}
+	else
+	{
+		mtCOVERAGE_TEST_MARKER();
 	}
 
 	#if ( INCLUDE_vTaskSuspend == 1 )
@@ -2021,7 +2252,7 @@ portTickType xTimeToWake;
 
 #if configUSE_TIMERS == 1
 
-	void vTaskPlaceOnEventListRestricted( xList * const pxEventList, portTickType xTicksToWait )
+	void vTaskPlaceOnEventListRestricted( xList * const pxEventList, const portTickType xTicksToWait )
 	{
 	portTickType xTimeToWake;
 
@@ -2047,6 +2278,10 @@ portTickType xTimeToWake;
 			/* The current task must be in a ready list, so there is no need to
 			check, and the port reset macro can be called directly. */
 			portRESET_READY_PRIORITY( pxCurrentTCB->uxPriority, uxTopReadyPriority );
+		}
+		else
+		{
+			mtCOVERAGE_TEST_MARKER();
 		}
 
 		/* Calculate the time at which the task should be woken if the event does
@@ -2115,7 +2350,7 @@ portBASE_TYPE xReturn;
 }
 /*-----------------------------------------------------------*/
 
-signed portBASE_TYPE xTaskRemoveFromUnorderedEventList( xListItem * pxEventListItem, portTickType xItemValue )
+signed portBASE_TYPE xTaskRemoveFromUnorderedEventList( xListItem * pxEventListItem, const portTickType xItemValue )
 {
 tskTCB *pxUnblockedTCB;
 portBASE_TYPE xReturn;
@@ -2124,7 +2359,7 @@ portBASE_TYPE xReturn;
 	SCHEDULER SUSPENDED.  It can also be called from within an ISR. */
 
 	/* Store the new item value in the event list. */
-	listSET_LIST_ITEM_VALUE( pxEventListItem, xItemValue );
+	listSET_LIST_ITEM_VALUE( pxEventListItem, xItemValue | taskEVENT_LIST_ITEM_VALUE_IN_USE );
 
 	/* Remove the TCB from the delayed list, and add it to the ready list. */
 
@@ -2253,7 +2488,7 @@ void vTaskMissedYield( void )
 
 #if ( configUSE_TRACE_FACILITY == 1 )
 
-	void vTaskSetTaskNumber( xTaskHandle xTask, unsigned portBASE_TYPE uxHandle )
+	void vTaskSetTaskNumber( xTaskHandle xTask, const unsigned portBASE_TYPE uxHandle )
 	{
 	tskTCB *pxTCB;
 
@@ -2312,6 +2547,10 @@ static portTASK_FUNCTION( prvIdleTask, pvParameters )
 			{
 				taskYIELD();
 			}
+			else
+			{
+				mtCOVERAGE_TEST_MARKER();
+			}
 		}
 		#endif /* ( ( configUSE_PREEMPTION == 1 ) && ( configIDLE_SHOULD_YIELD == 1 ) ) */
 
@@ -2359,8 +2598,16 @@ static portTASK_FUNCTION( prvIdleTask, pvParameters )
 						portSUPPRESS_TICKS_AND_SLEEP( xExpectedIdleTime );
 						traceLOW_POWER_IDLE_END();
 					}
+					else
+					{
+						mtCOVERAGE_TEST_MARKER();
+					}
 				}
 				( void ) xTaskResumeAll();
+			}
+			else
+			{
+				mtCOVERAGE_TEST_MARKER();
 			}
 		}
 		#endif /* configUSE_TICKLESS_IDLE */
@@ -2399,6 +2646,10 @@ static portTASK_FUNCTION( prvIdleTask, pvParameters )
 				{
 					eReturn = eNoTasksWaitingTimeout;
 				}
+				else
+				{
+					mtCOVERAGE_TEST_MARKER();
+				}
 			}
 			#endif /* configUSE_TIMERS */
 		}
@@ -2408,7 +2659,7 @@ static portTASK_FUNCTION( prvIdleTask, pvParameters )
 #endif /* configUSE_TICKLESS_IDLE */
 /*-----------------------------------------------------------*/
 
-static void prvInitialiseTCBVariables( tskTCB *pxTCB, const signed char * const pcName, unsigned portBASE_TYPE uxPriority, const xMemoryRegion * const xRegions, unsigned short usStackDepth )
+static void prvInitialiseTCBVariables( tskTCB * const pxTCB, const signed char * const pcName, unsigned portBASE_TYPE uxPriority, const xMemoryRegion * const xRegions, const unsigned short usStackDepth )
 {
 unsigned portBASE_TYPE x;
 
@@ -2424,6 +2675,10 @@ unsigned portBASE_TYPE x;
 		{
 			break;
 		}
+		else
+		{
+			mtCOVERAGE_TEST_MARKER();
+		}
 	}
 
 	/* Ensure the name string is terminated in the case that the string length
@@ -2435,6 +2690,10 @@ unsigned portBASE_TYPE x;
 	if( uxPriority >= ( unsigned portBASE_TYPE ) configMAX_PRIORITIES )
 	{
 		uxPriority = ( unsigned portBASE_TYPE ) configMAX_PRIORITIES - ( unsigned portBASE_TYPE ) 1U;
+	}
+	else
+	{
+		mtCOVERAGE_TEST_MARKER();
 	}
 
 	pxTCB->uxPriority = uxPriority;
@@ -2569,13 +2828,17 @@ static void prvCheckTasksWaitingTermination( void )
 
 				prvDeleteTCB( pxTCB );
 			}
+			else
+			{
+				mtCOVERAGE_TEST_MARKER();
+			}
 		}
 	}
 	#endif /* vTaskDelete */
 }
 /*-----------------------------------------------------------*/
 
-static void prvAddCurrentTaskToDelayedList( portTickType xTimeToWake )
+static void prvAddCurrentTaskToDelayedList( const portTickType xTimeToWake )
 {
 	/* The list item will be inserted in wake time order. */
 	listSET_LIST_ITEM_VALUE( &( pxCurrentTCB->xGenericListItem ), xTimeToWake );
@@ -2597,11 +2860,15 @@ static void prvAddCurrentTaskToDelayedList( portTickType xTimeToWake )
 		{
 			xNextTaskUnblockTime = xTimeToWake;
 		}
+		else
+		{
+			mtCOVERAGE_TEST_MARKER();
+		}
 	}
 }
 /*-----------------------------------------------------------*/
 
-static tskTCB *prvAllocateTCBAndStack( unsigned short usStackDepth, portSTACK_TYPE *puxStackBuffer )
+static tskTCB *prvAllocateTCBAndStack( const unsigned short usStackDepth, portSTACK_TYPE * const puxStackBuffer )
 {
 tskTCB *pxNewTCB;
 
@@ -2696,6 +2963,10 @@ tskTCB *pxNewTCB;
 				uxTask++;
 
 			} while( pxNextTCB != pxFirstTCB );
+		}
+		else
+		{
+			mtCOVERAGE_TEST_MARKER();
 		}
 
 		return uxTask;
@@ -2852,8 +3123,17 @@ tskTCB *pxTCB;
 		{
 			if( pxTCB->uxPriority < pxCurrentTCB->uxPriority )
 			{
-				/* Adjust the mutex holder state to account for its new priority. */
-				listSET_LIST_ITEM_VALUE( &( pxTCB->xEventListItem ), ( portTickType ) configMAX_PRIORITIES - ( portTickType ) pxCurrentTCB->uxPriority ); /*lint !e961 MISRA exception as the casts are only redundant for some ports. */
+				/* Adjust the mutex holder state to account for its new
+				priority.  Only reset the event list item value if the value is
+				not	being used for anything else. */
+				if( ( listGET_LIST_ITEM_VALUE( &( pxTCB->xEventListItem ) ) & taskEVENT_LIST_ITEM_VALUE_IN_USE ) == 0 )
+				{
+					listSET_LIST_ITEM_VALUE( &( pxTCB->xEventListItem ), ( portTickType ) configMAX_PRIORITIES - ( portTickType ) pxCurrentTCB->uxPriority ); /*lint !e961 MISRA exception as the casts are only redundant for some ports. */
+				}
+				else
+				{
+					mtCOVERAGE_TEST_MARKER();
+				}
 
 				/* If the task being modified is in the ready state it will need to
 				be moved into a new list. */
@@ -2862,6 +3142,10 @@ tskTCB *pxTCB;
 					if( uxListRemove( &( pxTCB->xGenericListItem ) ) == ( unsigned portBASE_TYPE ) 0 )
 					{
 						taskRESET_READY_PRIORITY( pxTCB->uxPriority );
+					}
+					else
+					{
+						mtCOVERAGE_TEST_MARKER();
 					}
 
 					/* Inherit the priority before being moved into the new list. */
@@ -2876,6 +3160,14 @@ tskTCB *pxTCB;
 
 				traceTASK_PRIORITY_INHERIT( pxTCB, pxCurrentTCB->uxPriority );
 			}
+			else
+			{
+				mtCOVERAGE_TEST_MARKER();
+			}
+		}
+		else
+		{
+			mtCOVERAGE_TEST_MARKER();
 		}
 	}
 
@@ -2898,14 +3190,36 @@ tskTCB *pxTCB;
 				{
 					taskRESET_READY_PRIORITY( pxTCB->uxPriority );
 				}
+				else
+				{
+					mtCOVERAGE_TEST_MARKER();
+				}
 
 				/* Disinherit the priority before adding the task into the new
 				ready list. */
 				traceTASK_PRIORITY_DISINHERIT( pxTCB, pxTCB->uxBasePriority );
 				pxTCB->uxPriority = pxTCB->uxBasePriority;
-				listSET_LIST_ITEM_VALUE( &( pxTCB->xEventListItem ), ( portTickType ) configMAX_PRIORITIES - ( portTickType ) pxTCB->uxPriority ); /*lint !e961 MISRA exception as the casts are only redundant for some ports. */
+
+				/* Only reset the event list item value if the value is not
+				being used for anything else. */
+				if( ( listGET_LIST_ITEM_VALUE( &( pxTCB->xEventListItem ) ) & taskEVENT_LIST_ITEM_VALUE_IN_USE ) == 0 )
+				{
+					listSET_LIST_ITEM_VALUE( &( pxTCB->xEventListItem ), ( portTickType ) configMAX_PRIORITIES - ( portTickType ) pxTCB->uxPriority ); /*lint !e961 MISRA exception as the casts are only redundant for some ports. */
+				}
+				else
+				{
+					mtCOVERAGE_TEST_MARKER();
+				}
 				prvAddTaskToReadyList( pxTCB );
 			}
+			else
+			{
+				mtCOVERAGE_TEST_MARKER();
+			}
+		}
+		else
+		{
+			mtCOVERAGE_TEST_MARKER();
 		}
 	}
 
@@ -2921,6 +3235,10 @@ tskTCB *pxTCB;
 		if( xSchedulerRunning != pdFALSE )
 		{
 			( pxCurrentTCB->uxCriticalNesting )++;
+		}
+		else
+		{
+			mtCOVERAGE_TEST_MARKER();
 		}
 	}
 
@@ -2941,7 +3259,19 @@ tskTCB *pxTCB;
 				{
 					portENABLE_INTERRUPTS();
 				}
+				else
+				{
+					mtCOVERAGE_TEST_MARKER();
+				}
 			}
+			else
+			{
+				mtCOVERAGE_TEST_MARKER();
+			}
+		}
+		else
+		{
+			mtCOVERAGE_TEST_MARKER();
 		}
 	}
 
@@ -2950,7 +3280,7 @@ tskTCB *pxTCB;
 
 #if ( ( configUSE_TRACE_FACILITY == 1 ) && ( configUSE_STATS_FORMATTING_FUNCTIONS == 1 ) )
 
-	void vTaskList( signed char *pcWriteBuffer )
+	void vTaskList( signed char * pcWriteBuffer )
 	{
 	xTaskStatusType *pxTaskStatusArray;
 	volatile unsigned portBASE_TYPE uxArraySize, x;
@@ -3025,6 +3355,10 @@ tskTCB *pxTCB;
 
 			/* Free the array again. */
 			vPortFree( pxTaskStatusArray );
+		}
+		else
+		{
+			mtCOVERAGE_TEST_MARKER();
 		}
 	}
 
@@ -3127,9 +3461,17 @@ tskTCB *pxTCB;
 					pcWriteBuffer += strlen( ( char * ) pcWriteBuffer );
 				}
 			}
+			else
+			{
+				mtCOVERAGE_TEST_MARKER();
+			}
 
 			/* Free the array again. */
 			vPortFree( pxTaskStatusArray );
+		}
+		else
+		{
+			mtCOVERAGE_TEST_MARKER();
 		}
 	}
 
@@ -3150,4 +3492,7 @@ portTickType uxReturn;
 }
 /*-----------------------------------------------------------*/
 
+#ifdef FREERTOS_MODULE_TEST
+	#include "tasks_test_access_functions.h"
+#endif
 

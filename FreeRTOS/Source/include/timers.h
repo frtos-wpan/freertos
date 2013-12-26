@@ -232,7 +232,7 @@ typedef void (*tmrTIMER_CALLBACK)( xTimerHandle xTimer );
  * }
  * @endverbatim
  */
-xTimerHandle xTimerCreate( const signed char * const pcTimerName, portTickType xTimerPeriodInTicks, unsigned portBASE_TYPE uxAutoReload, void * pvTimerID, tmrTIMER_CALLBACK pxCallbackFunction ) PRIVILEGED_FUNCTION;
+xTimerHandle xTimerCreate( const signed char * const pcTimerName, const portTickType xTimerPeriodInTicks, const unsigned portBASE_TYPE uxAutoReload, void * const pvTimerID, tmrTIMER_CALLBACK pxCallbackFunction ) PRIVILEGED_FUNCTION;
 
 /**
  * void *pvTimerGetTimerID( xTimerHandle xTimer );
@@ -993,6 +993,9 @@ xTaskHandle xTimerGetTimerDaemonTaskHandle( void );
  * *pxHigherPriorityTaskWoken must be initialised to pdFALSE.  See the
  * example code below.
  *
+ * @return pdPASS is returned if the message was successfully sent to the
+ * timer daemon task, otherwise pdFALSE is returned.
+ *
  * Example usage:
  * @verbatim
  *
@@ -1041,7 +1044,7 @@ portBASE_TYPE xTimerPendCallbackFromISR( pdAPPLICATION_CALLBACK_CODE pvCallbackF
  * for use by the kernel only.
  */
 portBASE_TYPE xTimerCreateTimerTask( void ) PRIVILEGED_FUNCTION;
-portBASE_TYPE xTimerGenericCommand( xTimerHandle xTimer, portBASE_TYPE xCommandID, portTickType xOptionalValue, signed portBASE_TYPE *pxHigherPriorityTaskWoken, portTickType xBlockTime ) PRIVILEGED_FUNCTION;
+portBASE_TYPE xTimerGenericCommand( xTimerHandle xTimer, const portBASE_TYPE xCommandID, const portTickType xOptionalValue, signed portBASE_TYPE * const pxHigherPriorityTaskWoken, const portTickType xBlockTime ) PRIVILEGED_FUNCTION;
 
 #ifdef __cplusplus
 }
