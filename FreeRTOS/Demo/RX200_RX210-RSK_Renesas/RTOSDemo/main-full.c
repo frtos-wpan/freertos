@@ -222,7 +222,7 @@ void vApplicationIdleHook( void );
  * it is possible that the stack overflow will have corrupted these - in which
  * case pxCurrentTCB can be inspected to find the same information.
  */
-void vApplicationStackOverflowHook( xTaskHandle pxTask, signed char *pcTaskName );
+void vApplicationStackOverflowHook( xTaskHandle pxTask, char *pcTaskName );
 
 /*
  * The reg test tasks as described at the top of this file.
@@ -294,7 +294,7 @@ extern void HardwareSetup( void );
 
 	/* Create the software timer that performs the 'check' functionality,
 	as described at the top of this file. */
-	xCheckTimer = xTimerCreate( ( const signed char * ) "CheckTimer",/* A text name, purely to help debugging. */
+	xCheckTimer = xTimerCreate( "CheckTimer",/* A text name, purely to help debugging. */
 								( mainCHECK_TIMER_PERIOD_MS ),		/* The timer period, in this case 5000ms (5s). */
 								pdTRUE,								/* This is an auto-reload timer, so xAutoReload is set to pdTRUE. */
 								( void * ) 0,						/* The ID is not used, so can be set to anything. */
@@ -437,7 +437,7 @@ void vApplicationMallocFailedHook( void )
 
 /* This function is explained by the comments above its prototype at the top
 of this file. */
-void vApplicationStackOverflowHook( xTaskHandle pxTask, signed char *pcTaskName )
+void vApplicationStackOverflowHook( xTaskHandle pxTask, char *pcTaskName )
 {
 	for( ;; );
 }

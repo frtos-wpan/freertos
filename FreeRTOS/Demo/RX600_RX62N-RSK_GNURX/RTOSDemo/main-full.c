@@ -219,7 +219,7 @@ void vApplicationIdleHook( void );
  * it is possible that the stack overflow will have corrupted these - in which
  * case pxCurrentTCB can be inspected to find the same information.
  */
-void vApplicationStackOverflowHook( xTaskHandle pxTask, signed char *pcTaskName );
+void vApplicationStackOverflowHook( xTaskHandle pxTask, char *pcTaskName );
 
 /*
  * The reg test tasks as described at the top of this file.
@@ -272,14 +272,14 @@ extern void HardwareSetup( void );
 	vParTestInitialise();
 
 	/* Start the reg test tasks which test the context switching mechanism. */
-	xTaskCreate( prvRegTest1Task, ( signed char * ) "RegTst1", configMINIMAL_STACK_SIZE, ( void * ) mainREG_TEST_1_PARAMETER, tskIDLE_PRIORITY, NULL );
-	xTaskCreate( prvRegTest2Task, ( signed char * ) "RegTst2", configMINIMAL_STACK_SIZE, ( void * ) mainREG_TEST_2_PARAMETER, tskIDLE_PRIORITY, NULL );
+	xTaskCreate( prvRegTest1Task, "RegTst1", configMINIMAL_STACK_SIZE, ( void * ) mainREG_TEST_1_PARAMETER, tskIDLE_PRIORITY, NULL );
+	xTaskCreate( prvRegTest2Task, "RegTst2", configMINIMAL_STACK_SIZE, ( void * ) mainREG_TEST_2_PARAMETER, tskIDLE_PRIORITY, NULL );
 
 	/* The web server task. */
-	xTaskCreate( vuIP_Task, ( signed char * ) "uIP", mainuIP_STACK_SIZE, NULL, mainuIP_TASK_PRIORITY, NULL );
+	xTaskCreate( vuIP_Task, "uIP", mainuIP_STACK_SIZE, NULL, mainuIP_TASK_PRIORITY, NULL );
 
 	/* Start the check task as described at the top of this file. */
-	xTaskCreate( prvCheckTask, ( signed char * ) "Check", configMINIMAL_STACK_SIZE, NULL, mainCHECK_TASK_PRIORITY, NULL );
+	xTaskCreate( prvCheckTask, "Check", configMINIMAL_STACK_SIZE, NULL, mainCHECK_TASK_PRIORITY, NULL );
 
 	/* Create the standard demo tasks. */
 	vStartBlockingQueueTasks( mainBLOCK_Q_PRIORITY );
@@ -448,7 +448,7 @@ void vApplicationMallocFailedHook( void )
 
 /* This function is explained by the comments above its prototype at the top
 of this file. */
-void vApplicationStackOverflowHook( xTaskHandle pxTask, signed char *pcTaskName )
+void vApplicationStackOverflowHook( xTaskHandle pxTask, char *pcTaskName )
 {
 	for( ;; );
 }
