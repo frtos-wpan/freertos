@@ -61,7 +61,7 @@ int main(void)
 
 	init_eui64();
 	
-	xTaskCreate((pdTASK_CODE) contiki_main, (const signed char *) "CoMa",
+	xTaskCreate((pdTASK_CODE) contiki_main, "CoMa",
 	  2000, NULL, tskIDLE_PRIORITY, NULL);
 
 	vTaskStartScheduler();
