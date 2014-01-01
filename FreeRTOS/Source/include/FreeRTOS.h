@@ -1,5 +1,5 @@
 /*
-    FreeRTOS V7.6.0 - Copyright (C) 2013 Real Time Engineers Ltd.
+    FreeRTOS V8.0.0:rc1 - Copyright (C) 2014 Real Time Engineers Ltd.
     All rights reserved
 
     VISIT http://www.FreeRTOS.org TO ENSURE YOU ARE USING THE LATEST VERSION.
@@ -71,6 +71,7 @@
  * Include the generic headers required for the FreeRTOS port being used.
  */
 #include <stddef.h>
+#include <stdint.h>
 
 /* Basic FreeRTOS definitions. */
 #include "projdefs.h"
@@ -86,16 +87,6 @@ is included as it is used by the port layer. */
 
 /* Definitions specific to the port being used. */
 #include "portable.h"
-
-
-/* Defines the prototype to which the application task hook function must
-conform. */
-typedef portBASE_TYPE (*pdTASK_HOOK_CODE)( void * );
-
-/* The type that holds event bits always matches portTickType - therefore the
-number of bits it holds is set by configUSE_16_BIT_TICKS (16 bits if set to 1,
-32 bits if set to 0. */
-typedef portTickType xEventBitsType;
 
 /*
  * Check all the required application specific macros have been defined.
@@ -245,8 +236,8 @@ typedef portTickType xEventBitsType;
 	#define INCLUDE_xEventGroupSetBitFromISR 0
 #endif
 
-#ifndef INCLUDE_xTimerPendCallbackFromISR
-	#define INCLUDE_xTimerPendCallbackFromISR 0
+#ifndef INCLUDE_xTimerPendFunctionCallFromISR
+	#define INCLUDE_xTimerPendFunctionCallFromISR 0
 #endif
 
 #ifndef configASSERT
@@ -312,7 +303,7 @@ typedef portTickType xEventBitsType;
 #endif
 
 #ifndef portPOINTER_SIZE_TYPE
-	#define portPOINTER_SIZE_TYPE unsigned long
+	#define portPOINTER_SIZE_TYPE uint32_t
 #endif
 
 /* Remove any unused trace macros. */
@@ -583,6 +574,10 @@ typedef portTickType xEventBitsType;
 	#define traceEVENT_GROUP_CLEAR_BITS( xEventGroup, uxBitsToClear )
 #endif
 
+#ifndef traceEVENT_GROUP_CLEAR_BITS_FROM_ISR
+	#define traceEVENT_GROUP_CLEAR_BITS_FROM_ISR( xEventGroup, uxBitsToClear )
+#endif
+
 #ifndef traceEVENT_GROUP_SET_BITS
 	#define traceEVENT_GROUP_SET_BITS( xEventGroup, uxBitsToSet )
 #endif
@@ -618,7 +613,7 @@ typedef portTickType xEventBitsType;
 #endif
 
 #ifndef portPRIVILEGE_BIT
-	#define portPRIVILEGE_BIT ( ( unsigned portBASE_TYPE ) 0x00 )
+	#define portPRIVILEGE_BIT ( ( UBaseType_t ) 0x00 )
 #endif
 
 #ifndef portYIELD_WITHIN_API
@@ -693,8 +688,28 @@ typedef portTickType xEventBitsType;
 	#define mtCOVERAGE_TEST_MARKER()
 #endif
 
-/* For backward compatability. */
+/* For backward compatibility. */
 #define eTaskStateGet eTaskGetState
+#define portTickType TickType_t
+#define xTaskHandle TaskHandle_t
+#define xQueueHandle QueueHandle_t
+#define xSemaphoreHandle SemaphoreHandle_t
+#define xQueueSetHandle QueueSetHandle_t
+#define xQueueSetMemberHandle QueueSetMemberHandle_t
+#define xTimeOutType TimeOut_t
+#define xMemoryRegion MemoryRegion_t
+#define xTaskParameters TaskParameters_t
+#define xTaskStatusType	TaskStatus_t
+#define xTimerHandle TimerHandle_t
+#define xCoRoutineHandle CoRoutineHandle_t
+#define pdTASK_HOOK_CODE TaskHookFunction_t
+
+/* Backward compatibility within the scheduler code only - these definitions
+are not really required but are included for completeness. */
+#define trmTIMER_CALLBACK TimerCallbackFunction_t
+#define pdTASK_CODE TaskFunction_t
+#define xListItem ListItem_t
+#define xList List_t
 
 #endif /* INC_FREERTOS_H */
 

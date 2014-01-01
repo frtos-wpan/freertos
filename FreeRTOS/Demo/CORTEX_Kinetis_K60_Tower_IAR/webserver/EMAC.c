@@ -1,5 +1,5 @@
 /*
-    FreeRTOS V7.6.0 - Copyright (C) 2013 Real Time Engineers Ltd. 
+    FreeRTOS V8.0.0:rc1 - Copyright (C) 2014 Real Time Engineers Ltd. 
     All rights reserved
 
     VISIT http://www.FreeRTOS.org TO ENSURE YOU ARE USING THE LATEST VERSION.
@@ -172,7 +172,7 @@ void vEMACInit( void )
 {
 int iData;
 extern int periph_clk_khz;
-const unsigned portCHAR ucMACAddress[] =
+const unsigned char ucMACAddress[] =
 {
 	configMAC_ADDR0, configMAC_ADDR1, configMAC_ADDR2, configMAC_ADDR3, configMAC_ADDR4, configMAC_ADDR5
 };
@@ -264,7 +264,7 @@ const unsigned portCHAR ucMACAddress[] =
 	{
 		/* Half duplex */
 		ENET_RCR |= ENET_RCR_DRT_MASK;
-		ENET_TCR &= (unsigned portLONG)~ENET_TCR_FDEN_MASK;
+		ENET_TCR &= (unsigned long)~ENET_TCR_FDEN_MASK;
 	}
 
 	if( iData & emacPHY_SPEED_STATUS )

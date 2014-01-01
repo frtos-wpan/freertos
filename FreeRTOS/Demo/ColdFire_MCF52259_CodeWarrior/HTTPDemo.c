@@ -1,5 +1,5 @@
 /*
-    FreeRTOS V7.6.0 - Copyright (C) 2013 Real Time Engineers Ltd.
+    FreeRTOS V8.0.0:rc1 - Copyright (C) 2014 Real Time Engineers Ltd.
     All rights reserved
 
     VISIT http://www.FreeRTOS.org TO ENSURE YOU ARE USING THE LATEST VERSION.
@@ -139,11 +139,11 @@ static void     vProcessConnection( struct netconn *pxNetCon );
  */
 static void vProcessConnection( struct netconn *pxNetCon )
 {
-    static portCHAR cDynamicPage[webMAX_PAGE_SIZE], cPageHits[11];
+    static char cDynamicPage[webMAX_PAGE_SIZE], cPageHits[11];
     struct netbuf  *pxRxBuffer;
-    portCHAR       *pcRxString;
-    unsigned portSHORT usLength;
-    static unsigned portLONG ulPageHits = 0;
+    char       *pcRxString;
+    unsigned short usLength;
+    static unsigned long ulPageHits = 0;
 
     /* We expect to immediately get data. */
     pxRxBuffer = netconn_recv( pxNetCon );

@@ -1,5 +1,5 @@
 /*
-    FreeRTOS V7.6.0 - Copyright (C) 2013 Real Time Engineers Ltd.
+    FreeRTOS V8.0.0:rc1 - Copyright (C) 2014 Real Time Engineers Ltd.
     All rights reserved
 
     VISIT http://www.FreeRTOS.org TO ENSURE YOU ARE USING THE LATEST VERSION.
@@ -345,7 +345,7 @@ void *pvAllocated;
 direct use from application code, hence their prototypes are not in queue.h. */
 extern void vQueueSetQueueNumber( xQueueHandle pxQueue, unsigned portBASE_TYPE uxQueueNumber );
 extern unsigned portBASE_TYPE uxQueueGetQueueNumber( xQueueHandle pxQueue );
-extern unsigned char ucQueueGetQueueType( xQueueHandle pxQueue );
+extern uint8_t ucQueueGetQueueType( xQueueHandle pxQueue );
 extern void vTaskSetTaskNumber( xTaskHandle xTask, unsigned portBASE_TYPE uxHandle );
 extern unsigned portBASE_TYPE uxTaskGetTaskNumber( xTaskHandle xTask );
 
@@ -402,6 +402,9 @@ void vFullDemoTickHookFunction( void )
 	/* Write to a queue that is in use as part of the queue set demo to
 	demonstrate using queue sets from an ISR. */
 	vQueueSetAccessQueueSetFromISR();
+
+	/* Exercise event groups from interrupts. */
+	vPeriodicEventGroupsProcessing();
 }
 /*-----------------------------------------------------------*/
 

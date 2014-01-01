@@ -1,5 +1,5 @@
 /*
-    FreeRTOS V7.6.0 - Copyright (C) 2013 Real Time Engineers Ltd. 
+    FreeRTOS V8.0.0:rc1 - Copyright (C) 2014 Real Time Engineers Ltd. 
     All rights reserved
 
     VISIT http://www.FreeRTOS.org TO ENSURE YOU ARE USING THE LATEST VERSION.
@@ -202,8 +202,8 @@ xTaskHandle xHighPriorityNormallyEmptyTask1, xHighPriorityNormallyEmptyTask2, xH
 the array position of the value is set to a the identifier of the task or
 interrupt that accessed the queue.  This way missing or duplicate values can be
 detected. */
-static unsigned portCHAR ucNormallyEmptyReceivedValues[ intqNUM_VALUES_TO_LOG ] = { 0 };
-static unsigned portCHAR ucNormallyFullReceivedValues[ intqNUM_VALUES_TO_LOG ] = { 0 };
+static unsigned char ucNormallyEmptyReceivedValues[ intqNUM_VALUES_TO_LOG ] = { 0 };
+static unsigned char ucNormallyFullReceivedValues[ intqNUM_VALUES_TO_LOG ] = { 0 };
 
 /* The test tasks themselves. */
 static void prvLowerPriorityNormallyEmptyTask( void *pvParameters );

@@ -1,5 +1,5 @@
 /*
-    FreeRTOS V7.6.0 - Copyright (C) 2013 Real Time Engineers Ltd. 
+    FreeRTOS V8.0.0:rc1 - Copyright (C) 2014 Real Time Engineers Ltd. 
     All rights reserved
 
     VISIT http://www.FreeRTOS.org TO ENSURE YOU ARE USING THE LATEST VERSION.
@@ -148,7 +148,7 @@ extern void vRegTest2( void *pvParameters );
 
 /* A variable that will get set to fail if a RegTest task finds an error.  The
 variable is inspected by the 'Check' task. */
-static volatile portLONG lRegTestStatus = pdPASS;
+static volatile long lRegTestStatus = pdPASS;
 
 /*-----------------------------------------------------------*/
 

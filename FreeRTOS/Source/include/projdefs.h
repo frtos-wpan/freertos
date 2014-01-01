@@ -1,5 +1,5 @@
 /*
-    FreeRTOS V7.6.0 - Copyright (C) 2013 Real Time Engineers Ltd.
+    FreeRTOS V8.0.0:rc1 - Copyright (C) 2014 Real Time Engineers Ltd.
     All rights reserved
 
     VISIT http://www.FreeRTOS.org TO ENSURE YOU ARE USING THE LATEST VERSION.
@@ -66,20 +66,19 @@
 #ifndef PROJDEFS_H
 #define PROJDEFS_H
 
-/* Defines the prototype to which task functions must conform. */
-typedef void (*pdTASK_CODE)( void * );
+/* 
+ * Defines the prototype to which task functions must conform.  Defined in this
+ * file to ensure the type is known before portable.h is included.
+ */
+typedef void (*TaskFunction_t)( void * );
 
-/* Defines the prototype to which callback functions called from the RTOS/timer
-daemon task must conform. */
-typedef void (*pdAPPLICATION_CALLBACK_CODE)( void *, unsigned long );
+#define pdFALSE			( ( BaseType_t ) 0 )
+#define pdTRUE			( ( BaseType_t ) 1 )
 
-#define pdFALSE		( ( portBASE_TYPE ) 0 )
-#define pdTRUE		( ( portBASE_TYPE ) 1 )
-
-#define pdPASS									( pdTRUE )
-#define pdFAIL									( pdFALSE )
-#define errQUEUE_EMPTY							( ( portBASE_TYPE ) 0 )
-#define errQUEUE_FULL							( ( portBASE_TYPE ) 0 )
+#define pdPASS			( pdTRUE )
+#define pdFAIL			( pdFALSE )
+#define errQUEUE_EMPTY	( ( BaseType_t ) 0 )
+#define errQUEUE_FULL	( ( BaseType_t ) 0 )
 
 /* Error definitions. */
 #define errCOULD_NOT_ALLOCATE_REQUIRED_MEMORY	( -1 )

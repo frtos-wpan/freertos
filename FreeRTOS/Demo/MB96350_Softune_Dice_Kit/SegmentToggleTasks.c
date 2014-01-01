@@ -1,5 +1,5 @@
 /*
-    FreeRTOS V7.6.0 - Copyright (C) 2013 Real Time Engineers Ltd.
+    FreeRTOS V8.0.0:rc1 - Copyright (C) 2014 Real Time Engineers Ltd.
     All rights reserved
 
     VISIT http://www.FreeRTOS.org TO ENSURE YOU ARE USING THE LATEST VERSION.
@@ -99,7 +99,7 @@
 static void vLEDFlashTask( void *pvParameters );
 
 /* The co-routine that is created 7 times. */
-static void prvFixedDelayCoRoutine( xCoRoutineHandle xHandle, unsigned short usIndex );
+static void prvFixedDelayCoRoutine( CoRoutineHandle_t xHandle, unsigned short usIndex );
 
 /* This task is created once, but itself creates 7 co-routines. */
 static void vLEDCoRoutineControlTask( void *pvParameters );
@@ -228,7 +228,7 @@ unsigned short usCoroutine;
 }
 /*-----------------------------------------------------------*/
 
-static void prvFixedDelayCoRoutine( xCoRoutineHandle xHandle, unsigned short usIndex )
+static void prvFixedDelayCoRoutine( CoRoutineHandle_t xHandle, unsigned short usIndex )
 {
 /* The usIndex parameter of the co-routine function is used as an index into
 the xFlashRates array to obtain the delay period to use. */

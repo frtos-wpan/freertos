@@ -1,5 +1,5 @@
 /*
-    FreeRTOS V7.5.3 - Copyright (C) 2013 Real Time Engineers Ltd.
+    FreeRTOS V8.0.0:rc1 - Copyright (C) 2014 Real Time Engineers Ltd.
     All rights reserved
 
     VISIT http://www.FreeRTOS.org TO ENSURE YOU ARE USING THE LATEST VERSION.
@@ -105,6 +105,11 @@ extern uint32_t SystemCoreClock;
 #define configUSE_MALLOC_FAILED_HOOK			1
 #define configUSE_APPLICATION_TASK_TAG			0
 #define configUSE_COUNTING_SEMAPHORES			1
+
+/* The full demo always has tasks to run so the tick will never be turned off.
+The blinky demo will use the default tickless idle implementation to turn the
+tick off. */
+#define configUSE_TICKLESS_IDLE					1
 
 /* Run time stats gathering definitions. */
 void vConfigureTimerForRunTimeStats( void );
